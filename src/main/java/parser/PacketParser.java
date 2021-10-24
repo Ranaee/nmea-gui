@@ -5,7 +5,7 @@ import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.VTGSentence;
-import parser.sentence.UnknownParser;
+import sentence.UnknownParser;
 
 
 import java.io.*;
@@ -32,7 +32,9 @@ public class PacketParser {
             for (int j = 0; j < PACKET_LENGTH; j++) {
                 String line = null;
                 try {
-                    line = reader.readLine();
+                    if (reader != null) {
+                        line = reader.readLine();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -57,11 +59,10 @@ public class PacketParser {
         return records;
     }
 
-    //gga, gsa, vtg, zda, gll, tku, rmc, gsv
-    public static String toString(Sentence sentence){
-/*        if (sentence.getSentenceId().equals(SentenceTypes.GGA.toString())){
+    public static String getSentenceDescription(Sentence sentence){
+        if (sentence.getSentenceId().equals(parser.SentenceTypes.GGA.toString())){
 
-        }*/
+        }
         if (sentence.getSentenceId().equals(SentenceTypes.VTG.toString())){
             StringBuilder builder = new StringBuilder();
             VTGSentence vtgSentence = (VTGSentence) sentence;

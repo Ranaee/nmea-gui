@@ -1,4 +1,4 @@
-package parser.sentence;
+package sentence;
 
 import net.sf.marineapi.nmea.sentence.Sentence;
 
