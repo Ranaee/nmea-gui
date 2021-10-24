@@ -1,15 +1,14 @@
 package parser;
 
+import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
 import net.sf.marineapi.nmea.sentence.Sentence;
+import net.sf.marineapi.nmea.sentence.VTGSentence;
 import parser.sentence.UnknownParser;
 
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,17 +16,28 @@ public class PacketParser {
 
     private static final int PACKET_LENGTH = 8;
 
-    public static List<Record> parse(File nmeaFile) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(nmeaFile));
+    public static List<Record> parse(File nmeaFile) {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(nmeaFile));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         SentenceFactory sentenceFactory = SentenceFactory.getInstance();
         List<Record> records = new ArrayList<>();
         boolean endOfTheLoop = false;
+        int i = 0;
         while (true) {
             List<Sentence> sentences = new ArrayList<>();
             for (int j = 0; j < PACKET_LENGTH; j++) {
-                String line = reader.readLine();
+                String line = null;
+                try {
+                    line = reader.readLine();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 if (line == null) {
-                    records.add(new Record(sentences));
+                    records.add(new Record(sentences, i));
                     endOfTheLoop = true;
                     break;
                 }
@@ -35,14 +45,40 @@ public class PacketParser {
                     Sentence sentence = sentenceFactory.createParser(line);
                     sentences.add(sentence);
                 } catch (UnsupportedSentenceException e) {
-                    sentences.add(new UnknownParser());
+                    sentences.add(new UnknownParser(line));
                 }
             }
             if (endOfTheLoop) {
                 break;
             }
-            records.add(new Record(sentences));
+            i++;
+            records.add(new Record(sentences, i));
         }
         return records;
+    }
+
+    //gga, gsa, vtg, zda, gll, tku, rmc, gsv
+    public static String toString(Sentence sentence){
+/*        if (sentence.getSentenceId().equals(SentenceTypes.GGA.toString())){
+
+        }*/
+        if (sentence.getSentenceId().equals(SentenceTypes.VTG.toString())){
+            StringBuilder builder = new StringBuilder();
+            VTGSentence vtgSentence = (VTGSentence) sentence;
+            try {
+                double magneticCourse = ((VTGSentence) sentence).getMagneticCourse();
+            }
+            catch (DataNotAvailableException e) {
+
+            }
+/*            builder.append("Магнитный курс: ");
+            builder.append(vtgSentence.getMagneticCourse());
+            builder.append("\n");*/
+            builder.append("Настоящий курс: ");
+            builder.append(vtgSentence.getTrueCourse());
+            builder.append("\n");
+            return builder.toString();
+        }
+        return "";
     }
 }

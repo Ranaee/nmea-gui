@@ -4,6 +4,8 @@ import net.sf.marineapi.nmea.sentence.TalkerId;
 
 public class UnknownParser implements UnknownSentence {
 
+    public String source;
+
     public char getBeginChar() {
         return 0;
     }
@@ -46,5 +48,14 @@ public class UnknownParser implements UnknownSentence {
 
     public String toSentence(int i) {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return source;
+    }
+
+    public UnknownParser(String source) {
+        this.source = source;
     }
 }
