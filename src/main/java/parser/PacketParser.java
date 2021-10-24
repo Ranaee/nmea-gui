@@ -12,6 +12,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.sf.marineapi.nmea.sentence.SentenceId.GGA;
+import static net.sf.marineapi.nmea.sentence.SentenceId.VTG;
+
 public class PacketParser {
 
     private static final int PACKET_LENGTH = 8;
@@ -60,10 +63,10 @@ public class PacketParser {
     }
 
     public static String getSentenceDescription(Sentence sentence){
-        if (sentence.getSentenceId().equals(parser.SentenceTypes.GGA.toString())){
+        if (sentence.getSentenceId().equals(GGA.toString())){
 
         }
-        if (sentence.getSentenceId().equals(SentenceTypes.VTG.toString())){
+        if (sentence.getSentenceId().equals(VTG.toString())){
             StringBuilder builder = new StringBuilder();
             VTGSentence vtgSentence = (VTGSentence) sentence;
             try {
