@@ -3,6 +3,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import net.sf.marineapi.nmea.sentence.Sentence;
 import parser.PacketParser;
 import parser.Record;
 
@@ -28,10 +29,14 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
+//        parseConsole();
     }
 
-    private void parseConsole(){
-        File testText = new File("test_all_nmea.TXT");
+    private static void parseConsole(){
+        File testText = new File("small.TXT");
         List<Record> records = PacketParser.parse(testText);
-    }
+        Sentence sn = records.get(0).getFields().get(0);
+        String string = PacketParser.getSentenceDescription(sn);
+        boolean t = true;
+     }
 }

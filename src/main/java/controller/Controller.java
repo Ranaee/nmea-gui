@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import net.sf.marineapi.nmea.sentence.Sentence;
@@ -38,6 +39,9 @@ public class Controller {
     @FXML
     private DatePicker toPicker;
 
+    @FXML
+    private TextArea recordDescription;
+
     private final List<Record> sourceRecords = new ArrayList<>();
 
     @FXML
@@ -46,7 +50,7 @@ public class Controller {
             String path = nmeaPath.getText();
             //TODO заменить на ошибку вида "не вввели путь"
             if ("".equals(path) || path == null) {
-                path = "test_all_nmea.txt";
+                path = "small.txt";
             }
             File file = new File(path);
             sourceRecords.addAll(PacketParser.parse(file));
@@ -77,9 +81,11 @@ public class Controller {
         sentenceView.setItems(FXCollections.observableList(currentRecord.getFields()));
     }
 
-/*    @FXML
+    @FXML
     public void getSentenceDescription(MouseEvent mouseEvent){
         Sentence currentSentence = sentenceView.getSelectionModel().getSelectedItem();
+        String description = PacketParser.getSentenceDescription(currentSentence);
+        recordDescription.setText(description);
 
-    }*/
+    }
 }

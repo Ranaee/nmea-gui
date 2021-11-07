@@ -3,12 +3,16 @@ package parser;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
+import net.sf.marineapi.nmea.sentence.GGASentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.VTGSentence;
+import net.sf.marineapi.nmea.util.Position;
 import sentence.UnknownParser;
 
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,11 +67,53 @@ public class PacketParser {
     }
 
     public static String getSentenceDescription(Sentence sentence){
+        StringBuilder builder = new StringBuilder();
         if (sentence.getSentenceId().equals(GGA.toString())){
-
+            GGASentence ggaSentence = (GGASentence) sentence;
+            String timePattern = "HHmm";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timePattern);
+            String time = "";
+            builder.append("Время UTC: ");
+            builder.append(time);
+            builder.append("\n");
+            Position position = ggaSentence.getPosition();
+            builder.append("Широта: ");
+            builder.append(position.getLatitude());
+            builder.append(" ");
+            builder.append(position.getLatitudeHemisphere());
+            builder.append("\n");
+            builder.append("Долгота: ");
+            builder.append(position.getLongitude());
+            builder.append(" ");
+            builder.append(position.getLongitudeHemisphere());
+            builder.append("\n");
+            builder.append("Высота над уровнем моря: ");
+            builder.append(position.getAltitude());
+            builder.append(" m");
+            builder.append("\n");
+            builder.append("Способ вычисления координат: ");
+            builder.append(ggaSentence.getFixQuality());
+            builder.append("\n");
+            builder.append("Количество активных спутников: ");
+            builder.append(ggaSentence.getSatelliteCount());
+            builder.append("\n");
+            builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
+            builder.append(ggaSentence.getHorizontalDOP());
+            builder.append("\n");
+           /* builder.append("Высота над уровнем моря: ");
+            builder.append(ggaSentence.getGeoidalHeight());
+            builder.append(" ");
+            builder.append(ggaSentence.getGeoidalHeightUnits());
+            builder.append("\n");
+            builder.append("Количество секунд прошедших с получения последней DGPS поправки: ");
+            builder.append(ggaSentence.getDgpsAge());
+            builder.append("\n");
+            builder.append("ID базовой станции предоставляющей DGPS поправки: ");
+            builder.append(ggaSentence.getDgpsStationId());
+            builder.append("\n");*/
+            return builder.toString();
         }
         if (sentence.getSentenceId().equals(VTG.toString())){
-            StringBuilder builder = new StringBuilder();
             VTGSentence vtgSentence = (VTGSentence) sentence;
             try {
                 double magneticCourse = ((VTGSentence) sentence).getMagneticCourse();
@@ -78,8 +124,17 @@ public class PacketParser {
 /*            builder.append("Магнитный курс: ");
             builder.append(vtgSentence.getMagneticCourse());
             builder.append("\n");*/
-            builder.append("Настоящий курс: ");
+            builder.append("Курс на истинный полюс в градусах: ");
             builder.append(vtgSentence.getTrueCourse());
+            builder.append("\n");
+            builder.append("Скорость, км/ч: ");
+            builder.append(vtgSentence.getSpeedKmh());
+            builder.append("\n");
+            builder.append("Скорость, узлы: ");
+            builder.append(vtgSentence.getSpeedKnots());
+            builder.append("\n");
+            builder.append("Способ вычисления скорости и курса: ");
+            builder.append(vtgSentence.getMode());
             builder.append("\n");
             return builder.toString();
         }

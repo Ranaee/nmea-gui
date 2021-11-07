@@ -47,7 +47,7 @@
             onAction="#parseFromInterval" prefHeight="57.0" prefWidth="52.0" text="Поиск"/>
     <ListView fx:id="recordView" layoutX="25.0" layoutY="94.0" prefHeight="424.0" prefWidth="200.0"
               onMouseClicked="#selectRecord"/>
-    <ListView fx:id="sentenceView" layoutX="239.0" layoutY="94.0" prefHeight="117.0" prefWidth="535.0"/>
-    <ListView fx:id="recordDescription" layoutX="239.0" layoutY="228.0" prefHeight="290.0" prefWidth="535.0"/>
+    <ListView fx:id="sentenceView" layoutX="239.0" layoutY="94.0" prefHeight="117.0" prefWidth="535.0" onMouseClicked="#getSentenceDescription"/>
+    <TextArea fx:id="recordDescription"  editable="false" layoutX="239.0" layoutY="228.0" prefHeight="290.0" prefWidth="535.0" />
   </AnchorPane>
 </VBox>
