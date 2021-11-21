@@ -7,6 +7,7 @@ import net.sf.marineapi.nmea.sentence.GGASentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.VTGSentence;
 import net.sf.marineapi.nmea.util.Position;
+import net.sf.marineapi.nmea.util.Time;
 import sentence.UnknownParser;
 
 
@@ -70,21 +71,23 @@ public class PacketParser {
         StringBuilder builder = new StringBuilder();
         if (sentence.getSentenceId().equals(GGA.toString())){
             GGASentence ggaSentence = (GGASentence) sentence;
-            String timePattern = "HHmm";
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timePattern);
-            String time = "";
+            Time time = ggaSentence.getTime();
             builder.append("Время UTC: ");
-            builder.append(time);
+            builder.append(time.getHour());
+            builder.append(":");
+            builder.append(time.getMinutes());
+            builder.append(":");
+            builder.append(Math.round(time.getSeconds()));
             builder.append("\n");
             Position position = ggaSentence.getPosition();
             builder.append("Широта: ");
             builder.append(position.getLatitude());
-            builder.append(" ");
+            builder.append("\u00B0 ");
             builder.append(position.getLatitudeHemisphere());
             builder.append("\n");
             builder.append("Долгота: ");
             builder.append(position.getLongitude());
-            builder.append(" ");
+            builder.append("\u00B0" + " ");
             builder.append(position.getLongitudeHemisphere());
             builder.append("\n");
             builder.append("Высота над уровнем моря: ");
