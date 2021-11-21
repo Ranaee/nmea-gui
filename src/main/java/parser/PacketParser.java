@@ -10,12 +10,10 @@ import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.Time;
 import sentence.UnknownParser;
 
-
 import java.io.*;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static net.sf.marineapi.nmea.sentence.SentenceId.GGA;
 import static net.sf.marineapi.nmea.sentence.SentenceId.VTG;
@@ -24,7 +22,7 @@ public class PacketParser {
 
     private static final int PACKET_LENGTH = 8;
 
-    public static List<Record> parse(File nmeaFile) {
+    public static List<Record> parse(File nmeaFile, boolean parseGSV) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(nmeaFile));
@@ -53,7 +51,9 @@ public class PacketParser {
                 }
                 try {
                     Sentence sentence = sentenceFactory.createParser(line);
-                    sentences.add(sentence);
+                    if (parseGSV || !"GSV".equals(sentence.getSentenceId())) {
+                        sentences.add(sentence);
+                    }
                 } catch (UnsupportedSentenceException e) {
                     sentences.add(new UnknownParser(line));
                 }
@@ -67,9 +67,56 @@ public class PacketParser {
         return records;
     }
 
-    public static String getSentenceDescription(Sentence sentence){
+    public static List<Record> parseNoLimit(File nmeaFile) {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(nmeaFile));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        SentenceFactory sentenceFactory = SentenceFactory.getInstance();
+        List<Record> records = new ArrayList<>();
+        boolean endOfTheLoop = false;
+        int i = 0;
+        while (true) {
+            List<Sentence> sentences = new ArrayList<>();
+            Sentence sentence = null;
+            boolean start = true;
+            while (start || sentence.getSentenceId() != null) {
+                start = false;
+                String line = null;
+                try {
+                    if (reader != null) {
+                        line = reader.readLine();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (line == null) {
+                    records.add(new Record(sentences, i));
+                    endOfTheLoop = true;
+                    break;
+                }
+                try {
+                    sentence = sentenceFactory.createParser(line);
+                    sentences.add(sentence);
+                } catch (UnsupportedSentenceException e) {
+                    sentence = new UnknownParser(line);
+                    sentences.add(sentence);
+                }
+            }
+            if (endOfTheLoop) {
+                break;
+            }
+            i++;
+            records.add(new Record(sentences, i));
+        }
+        return records;
+    }
+
+    public static String getSentenceDescription(Sentence sentence) {
         StringBuilder builder = new StringBuilder();
-        if (sentence.getSentenceId().equals(GGA.toString())){
+        if (sentence.getSentenceId().equals(GGA.toString())) {
             GGASentence ggaSentence = (GGASentence) sentence;
             Time time = ggaSentence.getTime();
             builder.append("Время UTC: ");
@@ -116,12 +163,11 @@ public class PacketParser {
             builder.append("\n");*/
             return builder.toString();
         }
-        if (sentence.getSentenceId().equals(VTG.toString())){
+        if (sentence.getSentenceId().equals(VTG.toString())) {
             VTGSentence vtgSentence = (VTGSentence) sentence;
             try {
                 double magneticCourse = ((VTGSentence) sentence).getMagneticCourse();
-            }
-            catch (DataNotAvailableException e) {
+            } catch (DataNotAvailableException e) {
 
             }
 /*            builder.append("Магнитный курс: ");
@@ -142,5 +188,10 @@ public class PacketParser {
             return builder.toString();
         }
         return "";
+    }
+
+    public static List<String> getPositionList(File nmeaFile) {
+        List<Record> record = PacketParser.parseNoLimit(nmeaFile);
+        return record.stream().map(x -> x.getFields().get(1).getSentenceId()).collect(Collectors.toList());
     }
 }

@@ -14,10 +14,10 @@ import java.util.List;
 public class Main extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         String schemaName = "scheme.fxml";
         URL schemeUrl = getClass().getClassLoader().getResource(schemaName);
-        if (schemeUrl == null){
+        if (schemeUrl == null) {
             throw new IllegalStateException("Schema " + schemaName + " not found");
         }
         Parent root = FXMLLoader.load(schemeUrl);
@@ -28,15 +28,19 @@ public class Main extends Application {
 
 
     public static void main(String[] args) {
-        launch(args);
-//        parseConsole();
+//        launch(args);
+        parseConsole();
     }
 
-    private static void parseConsole(){
-        File testText = new File("small.TXT");
-        List<Record> records = PacketParser.parse(testText);
-        Sentence sn = records.get(0).getFields().get(0);
-        String string = PacketParser.getSentenceDescription(sn);
+    private static void parseConsole() {
+        File testText = new File("small.txt");
+//        List<Record> records = PacketParser.parse(testText, false);
+        List<Record> recordsNoLimit = PacketParser.parseNoLimit(testText);
+        List<Record> recordsWithoutGSV = PacketParser.parse(testText, true);
+        List<String> sentenceTypes = PacketParser.getPositionList(testText);
+//        Sentence sn = records.get(0).getFields().get(0);
+//        boolean result = records.stream().flatMap(x->x.getFields().stream()).anyMatch(x->"GSV".equals(x.getSentenceId()));
+//        String string = PacketParser.getSentenceDescription(sn);
         boolean t = true;
-     }
+    }
 }

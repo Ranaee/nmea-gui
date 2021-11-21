@@ -1,7 +1,6 @@
 package controller;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.DatePicker;
@@ -53,7 +52,7 @@ public class Controller {
                 path = "small.txt";
             }
             File file = new File(path);
-            sourceRecords.addAll(PacketParser.parse(file));
+            sourceRecords.addAll(PacketParser.parse(file, true));
         }
         recordView.setItems(FXCollections.observableList(sourceRecords));
     }
