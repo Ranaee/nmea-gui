@@ -52,7 +52,7 @@ public class Controller {
                 path = "small.txt";
             }
             File file = new File(path);
-            sourceRecords.addAll(PacketParser.parse(file, true));
+            sourceRecords.addAll(PacketParser.parse(file));
         }
         recordView.setItems(FXCollections.observableList(sourceRecords));
     }

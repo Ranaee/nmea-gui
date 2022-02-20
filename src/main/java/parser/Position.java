@@ -7,6 +7,13 @@ public class Position {
     private String longitude;
     private String lonHemisphere;
 
+    public Position(String latitude, String latHemisphere, String longitude, String lonHemisphere) {
+        this.latitude = latitude;
+        this.latHemisphere = latHemisphere;
+        this.longitude = longitude;
+        this.lonHemisphere = lonHemisphere;
+    }
+
     public String getLatitude() {
         return latitude;
     }

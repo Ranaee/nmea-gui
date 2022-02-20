@@ -3,8 +3,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import net.sf.marineapi.nmea.sentence.Sentence;
 import parser.PacketParser;
+import parser.Position;
 import parser.Record;
 
 import java.io.File;
@@ -35,9 +35,10 @@ public class Main extends Application {
     private static void parseConsole() {
         File testText = new File("small.txt");
 //        List<Record> records = PacketParser.parse(testText, false);
-        List<Record> recordsNoLimit = PacketParser.parseNoLimit(testText);
+        List<Record> recordsNoLimit = PacketParser.parse(testText);
         List<Record> recordsWithoutGSV = PacketParser.parse(testText, true);
-        List<String> sentenceTypes = PacketParser.getPositionList(testText);
+        List<Position> sentenceTypes = PacketParser.getPositionList(testText);
+        String json = PacketParser.getPositionFile(testText);
 //        Sentence sn = records.get(0).getFields().get(0);
 //        boolean result = records.stream().flatMap(x->x.getFields().stream()).anyMatch(x->"GSV".equals(x.getSentenceId()));
 //        String string = PacketParser.getSentenceDescription(sn);

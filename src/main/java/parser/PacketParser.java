@@ -1,9 +1,12 @@
 package parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
 import net.sf.marineapi.nmea.sentence.GGASentence;
+import net.sf.marineapi.nmea.sentence.GLLSentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.VTGSentence;
 import net.sf.marineapi.nmea.util.Position;
@@ -15,8 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.sf.marineapi.nmea.sentence.SentenceId.GGA;
-import static net.sf.marineapi.nmea.sentence.SentenceId.VTG;
+import static net.sf.marineapi.nmea.sentence.SentenceId.*;
 
 public class PacketParser {
 
@@ -67,7 +69,7 @@ public class PacketParser {
         return records;
     }
 
-    public static List<Record> parseNoLimit(File nmeaFile) {
+    public static List<Record> parse(File nmeaFile) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(nmeaFile));
@@ -163,6 +165,29 @@ public class PacketParser {
             builder.append("\n");*/
             return builder.toString();
         }
+        if (sentence.getSentenceId().equals(GLL.toString())) {
+            GLLSentence gllSentence = (GLLSentence) sentence;
+            Position position = gllSentence.getPosition();
+            String latitude = position.getLatitudeHemisphere().toChar() + String.valueOf(position.getLatitude());
+            String longitude = position.getLongitudeHemisphere().toChar() + String.valueOf(position.getLongitude());
+            builder.append("Широта: ");
+            builder.append(latitude);
+            builder.append("\n");
+            builder.append("Долгота: ");
+            builder.append(longitude);
+            builder.append("\n");
+            builder.append("Время: ");
+            builder.append(gllSentence.getTime());
+            builder.append("\n");
+            builder.append("Достоверность получаемых координат: ");
+            builder.append(gllSentence.getStatus());
+            builder.append("\n");
+            builder.append("Способ получения данных: ");
+            //todo добавит легенду
+            builder.append(gllSentence.getMode());
+            builder.append("\n");
+            return builder.toString();
+        }
         if (sentence.getSentenceId().equals(VTG.toString())) {
             VTGSentence vtgSentence = (VTGSentence) sentence;
             try {
@@ -190,8 +215,24 @@ public class PacketParser {
         return "";
     }
 
-    public static List<String> getPositionList(File nmeaFile) {
-        List<Record> record = PacketParser.parseNoLimit(nmeaFile);
-        return record.stream().map(x -> x.getFields().get(1).getSentenceId()).collect(Collectors.toList());
+    public static List<parser.Position> getPositionList(File nmeaFile) {
+        List<Record> record = PacketParser.parse(nmeaFile);
+        return record.stream().map(x -> {
+            GGASentence ggaSentence = (GGASentence) (x.getFields().get(1));
+            Position position = ggaSentence.getPosition();
+            return new parser.Position(String.format("%.2f", position.getLatitude()),position.getLatitudeHemisphere().toString(),String.format("%.2f", position.getLongitude()),position.getLongitudeHemisphere().toString());
+        }).collect(Collectors.toList());
+
+    }
+
+    public static String getPositionFile(File from){
+        List<parser.Position> positions = getPositionList(from);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(positions);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }
