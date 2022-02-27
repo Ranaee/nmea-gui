@@ -2,13 +2,12 @@ package parser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.javafx.tk.TKPulseListener;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
-import net.sf.marineapi.nmea.sentence.GGASentence;
-import net.sf.marineapi.nmea.sentence.GLLSentence;
-import net.sf.marineapi.nmea.sentence.Sentence;
-import net.sf.marineapi.nmea.sentence.VTGSentence;
+import net.sf.marineapi.nmea.sentence.*;
+import net.sf.marineapi.nmea.util.Date;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.Time;
 import sentence.UnknownParser;
@@ -123,10 +122,11 @@ public class PacketParser {
             Time time = ggaSentence.getTime();
             builder.append("Время UTC: ");
             builder.append(time.getHour());
-            builder.append(":");
+            builder.append("ч:");
             builder.append(time.getMinutes());
-            builder.append(":");
+            builder.append("м:");
             builder.append(Math.round(time.getSeconds()));
+            builder.append("с");
             builder.append("\n");
             Position position = ggaSentence.getPosition();
             builder.append("Широта: ");
@@ -167,17 +167,25 @@ public class PacketParser {
         }
         if (sentence.getSentenceId().equals(GLL.toString())) {
             GLLSentence gllSentence = (GLLSentence) sentence;
+            Time time = gllSentence.getTime();
             Position position = gllSentence.getPosition();
-            String latitude = position.getLatitudeHemisphere().toChar() + String.valueOf(position.getLatitude());
-            String longitude = position.getLongitudeHemisphere().toChar() + String.valueOf(position.getLongitude());
+            String latitude = position.getLatitudeHemisphere().toChar() + " " + String.valueOf(position.getLatitude());
+            String longitude = position.getLongitudeHemisphere().toChar() + " " + String.valueOf(position.getLongitude());
             builder.append("Широта: ");
             builder.append(latitude);
+            builder.append("\u00B0 ");
             builder.append("\n");
             builder.append("Долгота: ");
             builder.append(longitude);
+            builder.append("\u00B0 ");
             builder.append("\n");
-            builder.append("Время: ");
-            builder.append(gllSentence.getTime());
+            builder.append("Время UTC: ");
+            builder.append(time.getHour());
+            builder.append("ч:");
+            builder.append(time.getMinutes());
+            builder.append("м:");
+            builder.append(Math.round(time.getSeconds()));
+            builder.append("с");
             builder.append("\n");
             builder.append("Достоверность получаемых координат: ");
             builder.append(gllSentence.getStatus());
@@ -185,6 +193,117 @@ public class PacketParser {
             builder.append("Способ получения данных: ");
             //todo добавит легенду
             builder.append(gllSentence.getMode());
+            builder.append("\n");
+            return builder.toString();
+        }
+        if (sentence.getSentenceId().equals(GSA.toString())) {
+            GSASentence gsaSentence = (GSASentence) sentence;
+            builder.append("Режим выбора формата 2D/3D: ");
+            builder.append(gsaSentence.getFixStatus());
+            builder.append("\n");
+            builder.append("Режим выбранного формата: ");
+            builder.append(gsaSentence.getMode());
+            builder.append("\n");
+            builder.append("ID активного спутника: ");
+            builder.append(gsaSentence.getSatelliteIds());
+            builder.append("\n");
+            builder.append("Пространственный геометрический фактор ухудшения точности (PDOP): ");
+            builder.append(gsaSentence.getPositionDOP());
+            builder.append("\n");
+            builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
+            builder.append(gsaSentence.getHorizontalDOP());
+            builder.append("\n");
+            builder.append("Вертикальный геометрический фактор ухудшения точности (VDOP): ");
+            builder.append(gsaSentence.getVerticalDOP());
+            builder.append("\n");
+            builder.append("Номер навигационной системы: ");
+            //todo добавит легенду
+            builder.append(gsaSentence.getTalkerId());
+            builder.append("\n");
+            return builder.toString();
+        }
+        /*if (sentence.getSentenceId().equals(TKU.toString())) {
+            TKUSentence tkuSentence = (TKUSentence) sentence;
+            builder.append("Режим выбора формата 2D/3D: ");
+            builder.append(gsaSentence.getFixStatus());
+            builder.append("\n");
+            builder.append("Режим выбранного формата: ");
+            builder.append(gsaSentence.getMode());
+            builder.append("\n");
+            builder.append("ID активного спутника: ");
+            builder.append(gsaSentence.getSatelliteIds());
+            builder.append("\n");
+            builder.append("Пространственный геометрический фактор ухудшения точности (PDOP): ");
+            builder.append(gsaSentence.getPositionDOP());
+            builder.append("\n");
+            builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
+            builder.append(gsaSentence.getHorizontalDOP());
+            builder.append("\n");
+            builder.append("Вертикальный геометрический фактор ухудшения точности (VDOP): ");
+            builder.append(gsaSentence.getVerticalDOP());
+            builder.append("\n");
+            builder.append("Номер навигационной системы: ");
+            builder.append(gsaSentence.getTalkerId());
+            builder.append("\n");
+            return builder.toString();
+        }*/
+        if (sentence.getSentenceId().equals(ZDA.toString())) {
+            ZDASentence zdaSentence = (ZDASentence) sentence;
+            Time time = zdaSentence.getTime();
+            Date date = zdaSentence.getDate();
+            builder.append("Время UTC: ");
+            builder.append(time.getHour());
+            builder.append("ч:");
+            builder.append(time.getMinutes());
+            builder.append("м:");
+            builder.append(Math.round(time.getSeconds()));
+            builder.append("с");
+            builder.append("\n");
+            builder.append("Дата: ");
+            builder.append(date.getDay());
+            builder.append(".");
+            builder.append(date.getMonth());
+            builder.append(".");
+            builder.append(date.getYear());
+            builder.append("\n");
+            return builder.toString();
+        }
+        if (sentence.getSentenceId().equals(RMC.toString())) {
+            RMCSentence rmcSentence = (RMCSentence) sentence;
+            builder.append("Время UTC: ");
+            builder.append(rmcSentence.getTime());
+            builder.append("\n");
+            builder.append("Достоверность полученных координат: ");
+            builder.append(rmcSentence.getCorrectedCourse());
+            builder.append("\n");
+            builder.append("ID активного спутника: ");
+            builder.append(rmcSentence.getCourse());
+            builder.append("\n");
+            builder.append("Пространственный геометрический фактор ухудшения точности (PDOP): ");
+            builder.append(rmcSentence.getSpeed());
+            builder.append("\n");
+            builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
+            builder.append(rmcSentence.getDate());
+            builder.append("\n");
+            builder.append("Вертикальный геометрический фактор ухудшения точности (VDOP): ");
+            builder.append(rmcSentence.getDirectionOfVariation());
+            builder.append("\n");
+            //todo добавит легенду
+            return builder.toString();
+        }
+        if (sentence.getSentenceId().equals(GSV.toString())) {
+            GSVSentence gsvSentence = (GSVSentence) sentence;
+            builder.append("Количество выводимых сообщений: ");
+            builder.append(gsvSentence.getSentenceCount());
+            builder.append("\n");
+            builder.append("Номер сообщения: ");
+            builder.append(gsvSentence.getSentenceIndex());
+            builder.append("\n");
+            builder.append("Количество наблюдаемых спутников: ");
+            builder.append(gsvSentence.getSatelliteCount());
+            builder.append("\n");
+            builder.append("Данные о спутнике: ");
+            builder.append(gsvSentence.getSatelliteInfo());
             builder.append("\n");
             return builder.toString();
         }
@@ -211,6 +330,7 @@ public class PacketParser {
             builder.append(vtgSentence.getMode());
             builder.append("\n");
             return builder.toString();
+
         }
         return "";
     }
