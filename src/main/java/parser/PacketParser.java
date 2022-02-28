@@ -1,8 +1,5 @@
 package parser;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.javafx.tk.TKPulseListener;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
@@ -10,19 +7,32 @@ import net.sf.marineapi.nmea.sentence.*;
 import net.sf.marineapi.nmea.util.Date;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.Time;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.jetbrains.annotations.Nullable;
 import sentence.UnknownParser;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static net.sf.marineapi.nmea.sentence.SentenceId.*;
 
+/**
+ * Парсер файлов протокола NMEA.
+ * Данный парсер поддерживает входные файлы, разделяемые на записи/пакеты из N предложений (8 предложений по умолчанию);
+ * Каждая запись состоит из следующих предложений в указанном порядке: RMC, GGA, GSA, GSA, VTG, ZDA, GLL, TKU;
+ * Парсер позволяет создавать CSV-файл, содержащий координаты, соотвествующие каждой записи.
+ */
 public class PacketParser {
 
     private static final int PACKET_LENGTH = 8;
 
+    private static final String POSITION_FILE_NAME = "./pos.csv";
+
+    private static final String[]  CSV_HEADER = {"pos_x", "pos_y"};
+
+    @Deprecated
     public static List<Record> parse(File nmeaFile, boolean parseGSV) {
         BufferedReader reader = null;
         try {
@@ -111,6 +121,11 @@ public class PacketParser {
             }
             i++;
             records.add(new Record(sentences, i));
+        }
+        boolean correctRecords = records.stream().allMatch(x->x.getFields().get(0).getSentenceId().equals(RMC.toString()));
+        if (!correctRecords) {
+            System.out.println("Incorrect file format");
+            return List.of();
         }
         return records;
     }
@@ -335,24 +350,24 @@ public class PacketParser {
         return "";
     }
 
-    public static List<parser.Position> getPositionList(File nmeaFile) {
-        List<Record> record = PacketParser.parse(nmeaFile);
-        return record.stream().map(x -> {
-            GGASentence ggaSentence = (GGASentence) (x.getFields().get(1));
-            Position position = ggaSentence.getPosition();
-            return new parser.Position(String.format("%.2f", position.getLatitude()),position.getLatitudeHemisphere().toString(),String.format("%.2f", position.getLongitude()),position.getLongitudeHemisphere().toString());
-        }).collect(Collectors.toList());
-
-    }
-
-    public static String getPositionFile(File from){
-        List<parser.Position> positions = getPositionList(from);
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.writeValueAsString(positions);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+    @Nullable
+    public static File createPositionCsv(List<Record> records){
+        File outputFile = new File(POSITION_FILE_NAME);
+        try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(CSV_HEADER))){
+            records.forEach(x->{
+                RMCSentence sentence = (RMCSentence) x.getFields().get(0);
+                Position position = sentence.getPosition();
+                try {
+                    printer.printRecord(position.getLatitude(), position.getLongitude());
+                } catch (IOException e) {
+                    System.out.println("Error occurred during writing line");
+                }
+            });
+            return outputFile;
+        } catch (IOException e) {
+            System.out.println("Error occurred during output file creation");
+            return null;
         }
-        return "";
     }
+
 }

@@ -37,8 +37,6 @@ public class Main extends Application {
 //        List<Record> records = PacketParser.parse(testText, false);
         List<Record> recordsNoLimit = PacketParser.parse(testText);
         List<Record> recordsWithoutGSV = PacketParser.parse(testText, true);
-        List<Position> sentenceTypes = PacketParser.getPositionList(testText);
-        String json = PacketParser.getPositionFile(testText);
 //        Sentence sn = records.get(0).getFields().get(0);
 //        boolean result = records.stream().flatMap(x->x.getFields().stream()).anyMatch(x->"GSV".equals(x.getSentenceId()));
 //        String string = PacketParser.getSentenceDescription(sn);
