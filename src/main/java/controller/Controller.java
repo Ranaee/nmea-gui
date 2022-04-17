@@ -8,6 +8,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.ZDASentence;
 import parser.PacketParser;
@@ -45,11 +46,11 @@ public class Controller {
 
     @FXML
     private void parseAll(ActionEvent event) {
-         if (sourceRecords.isEmpty()){
+        if (sourceRecords.isEmpty()){
             String path = nmeaPath.getText();
-            //TODO заменить на ошибку вида "не вввели путь"
             if ("".equals(path) || path == null) {
-                path = "small.txt";
+                nmeaPath.setText("Не выбран файл!");
+                return;
             }
             File file = new File(path);
             sourceRecords.addAll(PacketParser.parse(file));
@@ -86,5 +87,16 @@ public class Controller {
         String description = PacketParser.getSentenceDescription(currentSentence);
         recordDescription.setText(description);
 
+    }
+
+    @FXML
+    public void pickFile(ActionEvent actionEvent){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TXT files", "*.txt"));
+        File f = fileChooser.showOpenDialog(null);
+
+        if (f != null){
+            nmeaPath.setText(f.getAbsolutePath());
+        }
     }
 }

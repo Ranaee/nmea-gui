@@ -13,6 +13,9 @@ import java.util.List;
 
 public class Main extends Application {
 
+    private static final int WIDTH = 800;
+    private static final int HEIGHT = 600;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
         String schemaName = "scheme.fxml";
@@ -22,7 +25,7 @@ public class Main extends Application {
         }
         Parent root = FXMLLoader.load(schemeUrl);
         primaryStage.setTitle("NMEA Reader");
-        primaryStage.setScene(new Scene(root, 900, 700));
+        primaryStage.setScene(new Scene(root, WIDTH, HEIGHT));
         primaryStage.show();
     }
 
