@@ -4,12 +4,11 @@ import net.sf.marineapi.nmea.sentence.Sentence;
 
 import java.util.List;
 
-//todo в записи может быть ни одной zda - это жопа
 public class Record{
 
-    private String name;
+    private final String name;
 
-    private List<Sentence> fields;
+    private final List<Sentence> fields;
 
     public List<Sentence> getFields() {
         return fields;
