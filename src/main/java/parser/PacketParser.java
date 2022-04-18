@@ -218,18 +218,6 @@ public class PacketParser {
         builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
         builder.append(ggaSentence.getHorizontalDOP());
         builder.append("\n");
-        //TODO Удалить этот код, если он не нужен
-       /* builder.append("Высота над уровнем моря: ");
-        builder.append(ggaSentence.getGeoidalHeight());
-        builder.append(" ");
-        builder.append(ggaSentence.getGeoidalHeightUnits());
-        builder.append("\n");
-        builder.append("Количество секунд прошедших с получения последней DGPS поправки: ");
-        builder.append(ggaSentence.getDgpsAge());
-        builder.append("\n");
-        builder.append("ID базовой станции предоставляющей DGPS поправки: ");
-        builder.append(ggaSentence.getDgpsStationId());
-        builder.append("\n");*/
         return builder.toString();
     }
 
@@ -259,8 +247,6 @@ public class PacketParser {
         builder.append(gllSentence.getStatus());
         builder.append("\n");
         builder.append("Способ получения данных: ");
-        //TODO Добавить легенду чего?
-        //todo добавит легенду
         builder.append(gllSentence.getMode());
         builder.append("\n");
         return builder.toString();
