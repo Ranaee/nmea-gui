@@ -307,8 +307,10 @@ public class PacketParser {
         switch (status) {
             case ACTIVE:
                 builder.append("Активный");
+                break;
             case VOID:
                 builder.append("Недействителен");
+                break;
         }
         builder.append("\n");
         builder.append("Скорость над землей в узлах: ");
