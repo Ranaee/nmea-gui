@@ -302,6 +302,16 @@ public class PacketParser {
 
     private static String getRMCDesription(RMCSentence rmcSentence) {
         StringBuilder builder = new StringBuilder();
+        Time time = rmcSentence.getTime();
+        Date date = rmcSentence.getDate();
+        builder.append("Время UTC: ");
+        builder.append(time.getHour());
+        builder.append("ч:");
+        builder.append(time.getMinutes());
+        builder.append("м:");
+        builder.append(Math.round(time.getSeconds()));
+        builder.append("с");
+        builder.append("\n");
         builder.append("Статус: ");
         DataStatus status = rmcSentence.getStatus();
         switch (status) {
@@ -313,14 +323,39 @@ public class PacketParser {
                 break;
         }
         builder.append("\n");
+        Position position = rmcSentence.getPosition();
+        String latitude = position.getLatitudeHemisphere().toChar() + " " + position.getLatitude();
+        String longitude = position.getLongitudeHemisphere().toChar() + " " + position.getLongitude();
+        builder.append("Широта: ");
+        builder.append(latitude);
+        builder.append("\u00B0 ");
+        builder.append("\n");
+        //builder.append("Направление широты: ");
+        //builder.append("\n");
+        builder.append("Долгота: ");
+        builder.append(longitude);
+        builder.append("\u00B0 ");
+        builder.append("\n");
+        //builder.append("Направление долготы: ");
+        //builder.append("\n");
         builder.append("Скорость над землей в узлах: ");
         builder.append(rmcSentence.getSpeed());
         builder.append("\n");
+        builder.append("курс, в градусах: ");
+        builder.append(rmcSentence.getCourse());
+        builder.append("\u00B0 ");
+        builder.append("\n");
+        //builder.append("Магнитное склонение: ");
+        //builder.append("\n");
+        //builder.append("Направление магнитного склонения: ");
+        //builder.append("\n");
+        //builder.append("Индикатор режима системы позиционирования: ");
+        //builder.append("\n");
         builder.append("Режим работы: ");
         builder.append(rmcSentence.getMode().toString());
         builder.append("\n");
         builder.append("ID активного спутника: ");
-        builder.append(rmcSentence.getCourse());
+        builder.append(rmcSentence.getTalkerId());
         builder.append("\n");
         try {
             String directionOfVariation = rmcSentence.getDirectionOfVariation().toString();
