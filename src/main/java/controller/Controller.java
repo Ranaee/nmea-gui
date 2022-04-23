@@ -63,7 +63,7 @@ public class Controller {
         LocalDate fromDate = fromPicker.getValue();
         LocalDate toDate = toPicker.getValue();
         List<Record> filtered = sourceRecords.stream().filter(record -> {
-            Optional<Sentence> optional = record.getFields().stream().filter(x -> "ZDA".equals(x.getSentenceId())).findFirst();
+            Optional<Sentence> optional = record.getSentences().stream().filter(x -> "ZDA".equals(x.getSentenceId())).findFirst();
             if (optional.isEmpty()) {
                 return false;
             }
@@ -78,7 +78,7 @@ public class Controller {
     @FXML
     public void selectRecord(MouseEvent mouseEvent) {
         Record currentRecord = recordView.getSelectionModel().getSelectedItem();
-        sentenceView.setItems(FXCollections.observableList(currentRecord.getFields()));
+        sentenceView.setItems(FXCollections.observableList(currentRecord.getSentences()));
     }
 
     @FXML

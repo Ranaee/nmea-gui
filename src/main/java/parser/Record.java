@@ -8,14 +8,14 @@ public class Record{
 
     private final String name;
 
-    private final List<Sentence> fields;
+    private final List<Sentence> sentences;
 
-    public List<Sentence> getFields() {
-        return fields;
+    public List<Sentence> getSentences() {
+        return sentences;
     }
 
-    public Record(List<Sentence> fields, int number) {
-        this.fields = fields;
+    public Record(List<Sentence> sentences, int number) {
+        this.sentences = sentences;
         this.name = "Запись " + number;
     }
 

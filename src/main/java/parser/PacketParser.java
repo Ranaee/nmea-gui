@@ -1,12 +1,13 @@
 package parser;
 
-import exception.DataUnavailableException;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
 import net.sf.marineapi.nmea.sentence.*;
-import net.sf.marineapi.nmea.util.*;
+import net.sf.marineapi.nmea.util.DataStatus;
+import net.sf.marineapi.nmea.util.Date;
 import net.sf.marineapi.nmea.util.Position;
+import net.sf.marineapi.nmea.util.Time;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.jetbrains.annotations.Nullable;
@@ -14,11 +15,9 @@ import sentence.UnknownParser;
 import sentence.UnknownSentence;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import static net.sf.marineapi.nmea.sentence.SentenceId.*;
+import static net.sf.marineapi.nmea.sentence.SentenceId.RMC;
 
 /**
  * Парсер файлов протокола NMEA.
@@ -46,7 +45,50 @@ public class PacketParser {
 
     private static final String UNKNOWN_SENTENCE_TYPE = "Неизвестный тип записи";
 
+    private static class DopDTO {
+        private final double hDOP;
+        private final double vDOP;
+        private final double pDOP;
+        private final long time;
 
+        public DopDTO(double hDOP, double vDOP, double pDOP, long time) {
+            this.hDOP = hDOP;
+            this.vDOP = vDOP;
+            this.pDOP = pDOP;
+            this.time = time;
+        }
+
+        public double gethDOP() {
+            return hDOP;
+        }
+
+        public double getvDOP() {
+            return vDOP;
+        }
+
+        public double getpDOP() {
+            return pDOP;
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DopDTO dopDTO = (DopDTO) o;
+            return Double.compare(dopDTO.hDOP, hDOP) == 0 && Double.compare(dopDTO.vDOP, vDOP) == 0 && Double.compare(dopDTO.pDOP, pDOP) == 0 && time == dopDTO.time;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(hDOP, vDOP, pDOP, time);
+        }
+    }
+
+    //TODO Нужно разобраться оставить ли этот метод, он нигде не используется и ошибочный
     public static List<Record> parse(File nmeaFile, boolean parseGSV) {
         BufferedReader reader = null;
         try {
@@ -136,7 +178,7 @@ public class PacketParser {
             i++;
             records.add(new Record(sentences, i));
         }
-        boolean correctRecords = records.stream().allMatch(x -> x.getFields().get(0).getSentenceId().equals(RMC.toString()));
+        boolean correctRecords = records.stream().allMatch(x -> x.getSentences().get(0).getSentenceId().equals(RMC.toString()));
         if (!correctRecords) {
             System.out.println("Incorrect file format");
         }
@@ -341,7 +383,7 @@ public class PacketParser {
         builder.append("Скорость над землей в узлах: ");
         builder.append(rmcSentence.getSpeed());
         builder.append("\n");
-        builder.append("курс, в градусах: ");
+        builder.append("Курс, в градусах: ");
         builder.append(rmcSentence.getCourse());
         builder.append("\u00B0 ");
         builder.append("\n");
@@ -378,7 +420,7 @@ public class PacketParser {
         builder.append("Количество наблюдаемых спутников: ");
         builder.append(gsvSentence.getSatelliteCount());
         builder.append("\n");
-        builder.append("Данные о спутнике: ");
+        builder.append("Данные о спутниках: ");
         builder.append(gsvSentence.getSatelliteInfo());
         builder.append("\n");
         return builder.toString();
@@ -414,7 +456,7 @@ public class PacketParser {
         File outputFile = new File(POSITION_FILE_NAME);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(POSITION_CSV_HEADER))) {
             records.forEach(x -> {
-                RMCSentence sentence = (RMCSentence) x.getFields().get(0);
+                RMCSentence sentence = (RMCSentence) x.getSentences().get(0);
                 Position position = sentence.getPosition();
                 try {
                     printer.printRecord(position.getLatitude(), position.getLongitude());
@@ -433,11 +475,20 @@ public class PacketParser {
     public static File createDOPCsv(List<Record> records){
         File outputFile = new File(DOP_FILE_NAME);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DOP_CSV_HEADER))){
-            records.forEach(x->{
-                List<Sentence> fields = x.getFields();
-                GSASentence gsaSentence = (GSASentence) fields.stream().filter(sentence->sentence.getSentenceId().equals(GSA_STR)).findFirst().orElseThrow(()->new DataUnavailableException("Отсутствует GSA-запись"));
+            HashSet<DopDTO> dopSet = new HashSet<>();
+            for (Record x : records){
+                List<Sentence> sentences = x.getSentences();
+                Optional<Sentence> gsaSentenceOpt = sentences.stream().filter(sentence->sentence.getSentenceId().equals(GSA_STR)).findFirst();
+                Optional<Sentence> zdaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId().equals(ZDA_STR)).findFirst();
+                if (gsaSentenceOpt.isPresent() && zdaSentenceOpt.isPresent()){
+                    GSASentence gsaSentence = (GSASentence) gsaSentenceOpt.get();
+                    ZDASentence zdaSentence = (ZDASentence) zdaSentenceOpt.get();
+                    dopSet.add(new DopDTO(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP(), zdaSentence.getDate().toDate().getTime()));
+                }
+            }
+            dopSet.forEach(x->{
                 try {
-                    printer.printRecord(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP());
+                    printer.printRecord(x.gethDOP(), x.getvDOP(), x.getpDOP(), x.getTime());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }
