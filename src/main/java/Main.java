@@ -13,8 +13,8 @@ import java.util.List;
 
 public class Main extends Application {
 
-    private static final int WIDTH = 1275;
-    private static final int HEIGHT = 618;
+    private static final int WIDTH = 1341;
+    private static final int HEIGHT = 820;
 
     @Override
     public void start(Stage primaryStage) throws Exception {

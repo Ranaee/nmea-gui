@@ -98,8 +98,8 @@ public class PacketParser {
                 return getGGALegend((GGASentence) sentence);
             case GLL_STR:
                 return getGLLegend((GLLSentence) sentence);
-            //case GSA_STR:
-            //    return getGSALegend((GSASentence) sentence);
+            case GSA_STR:
+                return getGSALegend((GSASentence) sentence);
             //case ZDA_STR:
             //    return getZDALegend((ZDASentence) sentence);
             //case RMC_STR:
@@ -130,6 +130,21 @@ public class PacketParser {
                 "'M' - фиксированные данные;\n" +
                 "'N' - недостоверные данные;" +
                 "\nКонтрольная сумма строки - *hh");
+        builder.append("\n");
+        return builder.toString();
+    }
+
+    private static String getGSALegend(GSASentence gsaSentence) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Режим выбора формата 2D/3D: 'M' — ручной, принудительно включен 2D или 3D режим;\n" +
+                "A — автоматический, разрешено автоматически выбирать 2D или 3D режим.\n" +
+                "Режим выбранного формата: '1'- Местоположение не определено / '2'- 2D / '3'- 3D\n" +
+                "ID активного спутника (максимум 12 спутников) - xx\n" +
+                "Пространственный геометрический фактор ухудшения точности (PDOP) - x.x\n" +
+                "Горизонтальный геометрический фактор ухудшения точности (HDOP) - x.x\n" +
+                "Вертикальный геометрический фактор ухудшения точности (VDOP) - x.x\n" +
+                "Номер навигационной системы (1-GPS \"GP\", 2-Glonass \"GL\",, 3-Galileo \"GA\", 4-Beidu \"BD\"; \"GN\" - источник данных GPS+Glonass)\n" +
+                "Контрольная сумма строки - *hh");
         builder.append("\n");
         return builder.toString();
     }
@@ -404,10 +419,10 @@ public class PacketParser {
     private static String getGSADesription(GSASentence gsaSentence) {
         StringBuilder builder = new StringBuilder();
         builder.append("Режим выбора формата 2D/3D: ");
-        builder.append(gsaSentence.getFixStatus());
+        builder.append(gsaSentence.getMode());
         builder.append("\n");
         builder.append("Режим выбранного формата: ");
-        builder.append(gsaSentence.getMode());
+        builder.append(gsaSentence.getFixStatus());
         builder.append("\n");
         builder.append("ID активных спутников: ");
         builder.append(Arrays.toString(gsaSentence.getSatelliteIds()));
