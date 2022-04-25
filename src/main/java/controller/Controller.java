@@ -42,6 +42,9 @@ public class Controller {
     @FXML
     private TextArea recordDescription;
 
+    @FXML
+    private TextArea legendText;
+
     private final List<Record> sourceRecords = new ArrayList<>();
 
     @FXML
@@ -85,6 +88,8 @@ public class Controller {
     public void getSentenceDescription(MouseEvent mouseEvent){
         Sentence currentSentence = sentenceView.getSelectionModel().getSelectedItem();
         String description = PacketParser.getSentenceDescription(currentSentence);
+        String legend = PacketParser.getSentenceLegend(currentSentence);
+        legendText.setText(legend);
         recordDescription.setText(description);
 
     }
@@ -99,4 +104,6 @@ public class Controller {
             nmeaPath.setText(f.getAbsolutePath());
         }
     }
+    @FXML
+    public void createOutputFile(ActionEvent actionEvent){}
 }

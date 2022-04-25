@@ -88,6 +88,102 @@ public class PacketParser {
         }
     }
 
+    public static String getSentenceLegend(Sentence sentence) {
+        if (sentence instanceof UnknownSentence) {
+            return UNKNOWN_SENTENCE_TYPE;
+        }
+        String sentenceId = sentence.getSentenceId();
+        switch (sentenceId) {
+            case GGA_STR:
+                return getGGALegend((GGASentence) sentence);
+            case GLL_STR:
+                return getGLLegend((GLLSentence) sentence);
+            //case GSA_STR:
+            //    return getGSALegend((GSASentence) sentence);
+            //case ZDA_STR:
+            //    return getZDALegend((ZDASentence) sentence);
+            //case RMC_STR:
+             //   return getRMCLegend((RMCSentence) sentence);
+            //case GSV_STR:
+            //    return getGSVLegend((GSVSentence) sentence);
+            case VTG_STR:
+                return getVTGLegend((VTGSentence) sentence);
+            default:
+                return UNKNOWN_SENTENCE_TYPE;
+        }
+    }
+
+
+    private static String getVTGLegend(VTGSentence vtgSentence) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Курс на истинный полюс в градусах - x.x" +
+                "\nФлаг достоверности курса - 'T'-True(Достоверный) / 'F'-False(Недостоверный)" +
+                "\nМагнитное склонение в градусах (может не использоваться) - x.x" +
+                "\nОтносительно северного магнитного полюса (может не использоваться) - М(Магнитный)" +
+                "\nСкорость - s.ss" +
+                "\nЕдиница измерения скорости, узлы - N" +
+                "\nСкорость - s.ss" +
+                "\nЕдиница измерения скорости, км/ч - К" +
+                "\nСпособ вычисления скорости и курса: 'A' - автономный." +
+                "\n'D' - дифференциальный;\n" +
+                "'E' - аппроксимация;\n" +
+                "'M' - фиксированные данные;\n" +
+                "'N' - недостоверные данные;" +
+                "\nКонтрольная сумма строки - *hh");
+        builder.append("\n");
+        return builder.toString();
+    }
+
+    private static String getGLLegend(GLLSentence gllSentence) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Широта - xxxx.xx\n" +
+                "Направление широты: 'N'-север / 'S'-юг\n" +
+                "Долгота - yyyy.yy\n" +
+                "Направление долготы: 'E'-восток / 'W'-запад\n" +
+                "Время UTC - hhmmss.ss\n" +
+                "Достоверность полученных координат: 'A' - данные достоверны;\n" +
+                "'V' - ошибочные данные.\n" +
+                "Способ вычисления координат: 'A' - автономный;\n" +
+                "'D' - дифференциальный;\n" +
+                "'E' - аппроксимация;\n" +
+                "'M' - фиксированные данные;\n" +
+                "'N' - недостоверные данные.\n" +
+                "Контрольная сумма строки - *hh");
+        builder.append("\n");
+        return builder.toString();
+    }
+
+    private static String getGGALegend(GGASentence ggaSentence) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Время UTC - hhmmss.ss\n" +
+                "Широта - xxxx.xx\n" +
+                "Направление широты: 'N'-север / 'S'-юг\n" +
+                "Долгота - xxxx.xx\n" +
+                "Направление долготы: 'E'-восток / 'W'-запад\n" +
+                "Индикатор качества GPS сигнала: '0' - недоступно.\n" +
+                "'1' - автономно;\n" +
+                "'2' - дифференциально;\n" +
+                "'3' - PPS;\n" +
+                "'4' - фиксированный RTK;\n" +
+                "'5' - не фиксированный RTK;\n" +
+                "'6' - экстраполяция;\n" +
+                "'7' - фиксированные координаты;\n" +
+                "'8' - режим симуляции;\n" +
+                "Количество активных спутников, от \"00\" до \"12\"\n" +
+                "Горизонтальный геометрический фактор ухудшения точности (HDOP)\n" +
+                "Высота над уровнем моря - xxx\n" +
+                "Единицы измерения высоты в метрах - M\n" +
+                "Разница между эллипсоидом земли и уровнем моря - x.x\n" +
+                "Единицы измерения в метрах - M\n" +
+                "Количество секунд прошедших с получения последней DGPS поправки - x.x\n" +
+                "ID базовой станции предоставляющей DGPS поправки (если включено DGPS) - xxxx\n" +
+                "Контрольная сумма строки - *hh");
+        builder.append("\n");
+        return builder.toString();
+    }
+
+
+
     //TODO Нужно разобраться оставить ли этот метод, он нигде не используется и ошибочный
     public static List<Record> parse(File nmeaFile, boolean parseGSV) {
         BufferedReader reader = null;
@@ -260,6 +356,17 @@ public class PacketParser {
         builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
         builder.append(ggaSentence.getHorizontalDOP());
         builder.append("\n");
+        builder.append("Высота над уровнем моря в метрах: ");
+        //builder.append(ggaSentence.getGeoidalHeight());
+        //builder.append(", ");
+        //builder.append(ggaSentence.getGeoidalHeightUnits());
+        //builder.append("\n");
+        //builder.append("Разница между эллипсоидом земли и уровнем моря в метрах: ");
+        //builder.append(ggaSentence.getDgpsStationId());
+        //builder.append("\n");
+        //builder.append("Количество секунд прошедших с получения последней DGPS поправки: ");
+        //builder.append(ggaSentence.getDgpsAge());
+        //builder.append("\n");
         return builder.toString();
     }
 
@@ -411,6 +518,7 @@ public class PacketParser {
 
     private static String getGSVDesription(GSVSentence gsvSentence) {
         StringBuilder builder = new StringBuilder();
+        //SatelliteInfo satelliteInfo = (SatelliteInfo) gsvSentence.getSatelliteInfo();
         builder.append("Количество выводимых сообщений: ");
         builder.append(gsvSentence.getSentenceCount());
         builder.append("\n");
@@ -421,7 +529,7 @@ public class PacketParser {
         builder.append(gsvSentence.getSatelliteCount());
         builder.append("\n");
         builder.append("Данные о спутниках: ");
-        builder.append(gsvSentence.getSatelliteInfo());
+        //builder.append(elevation);
         builder.append("\n");
         return builder.toString();
     }
