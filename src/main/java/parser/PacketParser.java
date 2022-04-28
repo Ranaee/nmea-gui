@@ -358,11 +358,7 @@ public class PacketParser {
         builder.append("\u00B0" + " ");
         builder.append(position.getLongitudeHemisphere());
         builder.append("\n");
-        builder.append("Высота над уровнем моря: ");
-        builder.append(position.getAltitude());
-        builder.append(" m");
-        builder.append("\n");
-        builder.append("Способ вычисления координат: ");
+        builder.append("Индикатор качества GPS сигнала: ");
         builder.append(ggaSentence.getFixQuality());
         builder.append("\n");
         builder.append("Количество активных спутников: ");
@@ -371,17 +367,25 @@ public class PacketParser {
         builder.append("Горизонтальный геометрический фактор ухудшения точности (HDOP): ");
         builder.append(ggaSentence.getHorizontalDOP());
         builder.append("\n");
-        builder.append("Высота над уровнем моря в метрах: ");
-        //builder.append(ggaSentence.getGeoidalHeight());
-        //builder.append(", ");
-        //builder.append(ggaSentence.getGeoidalHeightUnits());
-        //builder.append("\n");
-        //builder.append("Разница между эллипсоидом земли и уровнем моря в метрах: ");
-        //builder.append(ggaSentence.getDgpsStationId());
-        //builder.append("\n");
-        //builder.append("Количество секунд прошедших с получения последней DGPS поправки: ");
-        //builder.append(ggaSentence.getDgpsAge());
-        //builder.append("\n");
+        builder.append("Высота над уровнем моря: ");
+        builder.append(ggaSentence.getAltitude());
+        builder.append(", ");
+        builder.append((ggaSentence.getAltitudeUnits()));
+        builder.append("\n");
+        try {
+            String dgps = ggaSentence.getDgpsStationId();
+            builder.append("Разница между эллипсоидом земли и уровнем моря в метрах: ");
+            builder.append(dgps);
+            builder.append("\n");
+        } catch (DataNotAvailableException ignored) {
+        }
+        try {
+            double dgpsAge = ggaSentence.getDgpsAge();
+            builder.append("Количество секунд прошедших с получения последней DGPS поправки: ");
+            builder.append(dgpsAge);
+            builder.append("\n");
+        } catch (DataNotAvailableException ignored) {
+        }
         return builder.toString();
     }
 
@@ -544,6 +548,17 @@ public class PacketParser {
         builder.append(gsvSentence.getSatelliteCount());
         builder.append("\n");
         builder.append("Данные о спутниках: ");
+        builder.append("\n")
+        gsvSentence.getSatelliteInfo().stream().forEach(x->{
+            builder.append("\tID спутника: " + x.getId());
+            builder.append("\n");
+            builder.append("\tВысота: " + x.getElevation());
+            builder.append("\n");
+            builder.append("\tАзимут истинный: " + x.getAzimuth());
+            builder.append("\n");
+            builder.append("\tОтношение «сигнал — шум»: " + x.getNoise());
+            builder.append("\n");
+        });
         //builder.append(elevation);
         builder.append("\n");
         return builder.toString();
