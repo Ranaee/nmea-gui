@@ -3,19 +3,21 @@ package controller;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.ZDASentence;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import parser.PacketParser;
 import parser.Record;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,14 @@ public class Controller {
     @FXML
     private TextArea legendText;
 
+    @FXML
+    private Button textOutputButton;
+
     private final List<Record> sourceRecords = new ArrayList<>();
+
+    private static final String INFO_FILE_NAME = "./info.csv";
+
+    private static final String[] INFO_CSV_HEADER = {"longitude","latitude","altitude", "time", "hdop", "vdop", "pdop"};
 
     @FXML
     private void parseAll(ActionEvent event) {
@@ -104,6 +113,26 @@ public class Controller {
             nmeaPath.setText(f.getAbsolutePath());
         }
     }
+
     @FXML
-    public void createOutputFile(ActionEvent actionEvent){}
+    public void createOutputFile(ActionEvent actionEvent){
+        if (sourceRecords.isEmpty()){
+            System.out.println("Данные отсутствуют!!!");
+            return;
+        }
+        List<PacketParser.DopDTO> sources = PacketParser.getDopDTOList(sourceRecords);
+        File outputFile = new File(INFO_FILE_NAME);
+        try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(INFO_CSV_HEADER))){
+            sources.forEach(x->{
+                try {
+                    printer.printRecord(x.getLongitude(), x.getLatitude(), x.getAltitude(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
+                            .toEpochMilli(), x.gethDOP(), x.getvDOP(), x.getpDOP());
+                } catch (IOException e) {
+                    System.out.println("Error occurred during writing line");
+                }
+            });
+        } catch (IOException e) {
+            System.out.println("Error occurred during output file creation");
+        }
+    }
 }

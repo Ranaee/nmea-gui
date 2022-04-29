@@ -15,6 +15,8 @@ import sentence.UnknownParser;
 import sentence.UnknownSentence;
 
 import java.io.*;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static net.sf.marineapi.nmea.sentence.SentenceId.RMC;
@@ -45,17 +47,34 @@ public class PacketParser {
 
     private static final String UNKNOWN_SENTENCE_TYPE = "Неизвестный тип записи";
 
-    private static class DopDTO {
+    public static class DopDTO {
         private final double hDOP;
         private final double vDOP;
         private final double pDOP;
-        private final long time;
+        private final double longitude;
+        private final double latitude;
+        private final double altitude;
 
-        public DopDTO(double hDOP, double vDOP, double pDOP, long time) {
+        private final LocalDateTime time;
+
+        public DopDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time, double longitude, double latitude, double altitude) {
+            this.hDOP = hDOP;
+            this.vDOP = vDOP;
+            this.pDOP = pDOP;
+            this.longitude = longitude;
+            this.latitude = latitude;
+            this.altitude = altitude;
+            this.time = time;
+        }
+
+        public DopDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time) {
             this.hDOP = hDOP;
             this.vDOP = vDOP;
             this.pDOP = pDOP;
             this.time = time;
+            this.longitude = 0;
+            this.latitude = 0;
+            this.altitude = 0;
         }
 
         public double gethDOP() {
@@ -70,7 +89,7 @@ public class PacketParser {
             return pDOP;
         }
 
-        public long getTime() {
+        public LocalDateTime getTime() {
             return time;
         }
 
@@ -85,6 +104,18 @@ public class PacketParser {
         @Override
         public int hashCode() {
             return Objects.hash(hDOP, vDOP, pDOP, time);
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getAltitude() {
+            return altitude;
         }
     }
 
@@ -548,7 +579,7 @@ public class PacketParser {
         builder.append(gsvSentence.getSatelliteCount());
         builder.append("\n");
         builder.append("Данные о спутниках: ");
-        builder.append("\n")
+        builder.append("\n");
         gsvSentence.getSatelliteInfo().stream().forEach(x->{
             builder.append("\tID спутника: " + x.getId());
             builder.append("\n");
@@ -621,12 +652,13 @@ public class PacketParser {
                 if (gsaSentenceOpt.isPresent() && zdaSentenceOpt.isPresent()){
                     GSASentence gsaSentence = (GSASentence) gsaSentenceOpt.get();
                     ZDASentence zdaSentence = (ZDASentence) zdaSentenceOpt.get();
-                    dopSet.add(new DopDTO(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP(), zdaSentence.getDate().toDate().getTime()));
+                    dopSet.add(new DopDTO(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP(), mapNmeaTimeToJavaTime(zdaSentence)));
                 }
             }
             dopSet.forEach(x->{
                 try {
-                    printer.printRecord(x.gethDOP(), x.getvDOP(), x.getpDOP(), x.getTime());
+                    printer.printRecord(x.gethDOP(), x.getvDOP(), x.getpDOP(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
+                            .toEpochMilli());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }
@@ -638,4 +670,28 @@ public class PacketParser {
         }
     }
 
+    public static List<DopDTO> getDopDTOList(List<Record> records){
+        List<DopDTO> result = new ArrayList<>();
+        for (Record x : records){
+            List<Sentence> sentences = x.getSentences();
+            Optional<Sentence> gsaSentenceOpt = sentences.stream().filter(sentence->sentence.getSentenceId().equals(GSA_STR)).findFirst();
+            Optional<Sentence> zdaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId().equals(ZDA_STR)).findFirst();
+            Optional<Sentence> ggaSentenceOpt = sentences.stream().filter(sentence->sentence.getSentenceId().equals(GGA_STR)).findFirst();
+            if (gsaSentenceOpt.isPresent() && zdaSentenceOpt.isPresent() && ggaSentenceOpt.isPresent()){
+                GSASentence gsaSentence = (GSASentence) gsaSentenceOpt.get();
+                ZDASentence zdaSentence = (ZDASentence) zdaSentenceOpt.get();
+                GGASentence ggaSentence = (GGASentence) ggaSentenceOpt.get();
+                result.add(new DopDTO(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP(), mapNmeaTimeToJavaTime(zdaSentence), ggaSentence.getPosition().getLongitude(), ggaSentence.getPosition().getLatitude(), ggaSentence.getAltitude()));
+            }
+        }
+        return result;
+    }
+
+    public static LocalDateTime mapNmeaTimeToJavaTime(Date date, int localZoneHours, int localZoneMinutes){
+        return LocalDateTime.of(date.getYear(), date.getMonth(), date.getDay(), localZoneHours, localZoneMinutes);
+    }
+
+    public static LocalDateTime mapNmeaTimeToJavaTime(ZDASentence zdaSentence){
+        return mapNmeaTimeToJavaTime(zdaSentence.getDate(), zdaSentence.getLocalZoneHours(), zdaSentence.getLocalZoneMinutes());
+    }
 }
