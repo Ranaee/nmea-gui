@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
@@ -12,6 +11,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
@@ -48,19 +48,32 @@
       <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
     </Menu>
   </MenuBar>
-   <ButtonBar nodeOrientation="LEFT_TO_RIGHT" prefHeight="53.0" prefWidth="1339.0">
-     <buttons>
-       <Button fx:id="parsingPaneBtn" defaultButton="true" mnemonicParsing="false" onAction="#changeToParsingPane" text="Парсинг NMEA" />
-         <Button fx:id="geofactorsPlotBtn" mnemonicParsing="false" onAction="#changeToGeofactorsPlotPane" text="Геометрические факторы" />
-         <Button fx:id="ellipsePlotBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#changeToEllipsePlotPane" text="Эллипс рассеивания" />
-     </buttons>
-      <VBox.margin>
-         <Insets />
-      </VBox.margin>
-      <padding>
-         <Insets right="850.0" />
-      </padding>
-   </ButtonBar>
+    <HBox prefHeight="100.0" prefWidth="200.0">
+        <VBox.margin>
+            <Insets/>
+        </VBox.margin>
+        <padding>
+            <Insets left="15.0" top="15.0"/>
+        </padding>
+        <Button fx:id="parsingPaneBtn" defaultButton="true" mnemonicParsing="false" onAction="#changeToParsingPane"
+                text="Парсинг NMEA">
+             <HBox.margin>
+                 <Insets right="15.0"/>
+             </HBox.margin>
+        </Button>
+        <Button fx:id="geofactorsPlotBtn" contentDisplay="CENTER" mnemonicParsing="false"
+                onAction="#changeToGeofactorsPlotPane" text="Геометрические факторы" textOverrun="CLIP">
+           <HBox.margin>
+               <Insets right="15.0"/>
+           </HBox.margin>
+        </Button>
+        <Button fx:id="ellipsePlotBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false"
+                onAction="#changeToEllipsePlotPane" text="Эллипс рассеивания">
+           <HBox.margin>
+               <Insets right="15.0"/>
+           </HBox.margin>
+        </Button>
+    </HBox>
     <StackPane fx:id="stackPane" prefHeight="600.0" prefWidth="1041.0">
         <AnchorPane fx:id="ellipsePane" prefHeight="200.0" prefWidth="200.0" />
         <AnchorPane fx:id="geofactorsPane" prefHeight="200.0" prefWidth="200.0" />
