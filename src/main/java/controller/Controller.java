@@ -81,10 +81,6 @@ public class Controller {
 
 
     @FXML
-    private void initialize(){
-    }
-
-    @FXML
     private void parseAll(ActionEvent event) {
         if (sourceRecords.isEmpty()){
             String path = nmeaPath.getText();
@@ -163,43 +159,4 @@ public class Controller {
             System.out.println("Error occurred during output file creation");
         }
     }
-
-/*    public void changeToParsingPane(ActionEvent actionEvent) {
-        parsingPaneBtn.setDefaultButton(true);
-        ellipsePlotBtn.setDefaultButton(false);
-        geofactorsPlotBtn.setDefaultButton(false);
-        ObservableList<Node> children = stackPane.getChildren();
-        int i = children.indexOf(parsingPane);
-        if (i == -1){
-            children.add(parsingPane);
-        }
-        children.remove(ellipsePane);
-        children.remove(geofactorsPane);
-    }
-
-    public void changeToGeofactorsPlotPane(ActionEvent actionEvent) {
-        parsingPaneBtn.setDefaultButton(false);
-        ellipsePlotBtn.setDefaultButton(false);
-        geofactorsPlotBtn.setDefaultButton(true);
-        ObservableList<Node> children = stackPane.getChildren();
-        int i = children.indexOf(geofactorsPane);
-        if (i == -1){
-            children.add(geofactorsPane);
-        }
-        children.remove(parsingPane);
-        children.remove(ellipsePane);
-    }
-
-    public void changeToEllipsePlotPane(ActionEvent actionEvent) {
-        parsingPaneBtn.setDefaultButton(false);
-        ellipsePlotBtn.setDefaultButton(true);
-        geofactorsPlotBtn.setDefaultButton(false);
-        ObservableList<Node> children = stackPane.getChildren();
-        int i = children.indexOf(ellipsePane);
-        if (i == -1){
-            children.add(ellipsePane);
-        }
-        children.remove(geofactorsPane);
-        children.remove(parsingPane);
-    }*/
 }
