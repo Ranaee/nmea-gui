@@ -47,9 +47,6 @@ public class Controller {
     @FXML
     private TextArea legendText;
 
-    @FXML
-    private Button textOutputButton;
-
     private final List<Record> sourceRecords = new ArrayList<>();
 
     private static final String INFO_FILE_NAME = "./info.csv";
@@ -134,5 +131,14 @@ public class Controller {
         } catch (IOException e) {
             System.out.println("Error occurred during output file creation");
         }
+    }
+
+    public void changeToParsingPane(ActionEvent actionEvent) {
+    }
+
+    public void changeToGeofactorsPlotPane(ActionEvent actionEvent) {
+    }
+
+    public void changeToEllipsePlotPane(ActionEvent actionEvent) {
     }
 }

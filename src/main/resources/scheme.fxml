@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
@@ -10,11 +12,12 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
 <VBox prefHeight="820.0" prefWidth="1341.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Controller">
-  <MenuBar prefHeight="65.0" prefWidth="787.0" VBox.vgrow="NEVER">
+  <MenuBar prefHeight="26.0" prefWidth="1344.0" VBox.vgrow="NEVER">
     <Menu mnemonicParsing="false" text="File">
       <MenuItem mnemonicParsing="false" text="New" />
       <MenuItem mnemonicParsing="false" text="Open…" />
@@ -45,22 +48,37 @@
       <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
     </Menu>
   </MenuBar>
-  <AnchorPane prefHeight="600.0" prefWidth="1041.0" VBox.vgrow="ALWAYS">
-    <TextField fx:id="nmeaPath" layoutX="13.0" layoutY="44.0" prefHeight="25.0" prefWidth="438.0" />
-    <Button layoutX="329.0" layoutY="76.0" mnemonicParsing="false" onAction="#pickFile" prefHeight="25.0" prefWidth="32.0" text="..." />
-    <Button fx:id="parseButton" layoutX="375.0" layoutY="76.0" mnemonicParsing="false" onAction="#parseAll" prefHeight="25.0" prefWidth="78.0" text="Открыть" />
-    <DatePicker fx:id="fromPicker" layoutX="538.0" layoutY="44.0" />
-    <DatePicker fx:id="toPicker" layoutX="538.0" layoutY="76.0" />
-    <Button fx:id="intervalButton" layoutX="722.0" layoutY="44.0" mnemonicParsing="false" onAction="#parseFromInterval" prefHeight="57.0" prefWidth="52.0" text="Поиск" />
-    <ListView fx:id="recordView" layoutX="14.0" layoutY="114.0" onMouseClicked="#selectRecord" prefHeight="585.0" prefWidth="210.0" />
-    <ListView fx:id="sentenceView" layoutX="239.0" layoutY="114.0" onMouseClicked="#getSentenceDescription" prefHeight="222.0" prefWidth="535.0" />
-    <TextArea fx:id="recordDescription" editable="false" layoutX="239.0" layoutY="356.0" prefHeight="343.0" prefWidth="535.0" />
-      <Button fx:id="textOutputButton" layoutX="574.0" layoutY="715.0" mnemonicParsing="false" onAction="#createOutputFile" prefHeight="25.0" prefWidth="200.0" text="вывод в текстовый файл" />
-      <TextArea fx:id="legendText" editable="false" layoutX="793.0" layoutY="43.0" prefHeight="697.0" prefWidth="535.0" />
-      <Text layoutX="538.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выборка по дате" />
-      <Text layoutX="14.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выбор файла" />
-      <Text layoutX="793.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Легенда" />
-      <Button layoutX="14.0" layoutY="715.0" mnemonicParsing="false" text="Геометрические факторы" />
-      <Button layoutX="184.0" layoutY="715.0" mnemonicParsing="false" text="Элипс рассеивания" />
-  </AnchorPane>
+   <ButtonBar nodeOrientation="LEFT_TO_RIGHT" prefHeight="53.0" prefWidth="1339.0">
+     <buttons>
+       <Button fx:id="parsingPaneBtn" defaultButton="true" mnemonicParsing="false" onAction="#changeToParsingPane" text="Парсинг NMEA" />
+         <Button fx:id="geofactorsPlotBtn" mnemonicParsing="false" onAction="#changeToGeofactorsPlotPane" text="Геометрические факторы" />
+         <Button fx:id="ellipsePlotBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#changeToEllipsePlotPane" text="Эллипс рассеивания" />
+     </buttons>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
+      <padding>
+         <Insets right="850.0" />
+      </padding>
+   </ButtonBar>
+   <StackPane prefHeight="150.0" prefWidth="200.0">
+      <children>
+        <AnchorPane fx:id="parsingPane" prefHeight="600.0" prefWidth="1041.0">
+          <TextField fx:id="nmeaPath" layoutX="13.0" layoutY="44.0" prefHeight="25.0" prefWidth="438.0" />
+          <Button layoutX="329.0" layoutY="76.0" mnemonicParsing="false" onAction="#pickFile" prefHeight="25.0" prefWidth="32.0" text="..." />
+          <Button fx:id="parseButton" layoutX="375.0" layoutY="76.0" mnemonicParsing="false" onAction="#parseAll" prefHeight="25.0" prefWidth="78.0" text="Открыть" />
+          <DatePicker fx:id="fromPicker" layoutX="538.0" layoutY="44.0" />
+          <DatePicker fx:id="toPicker" layoutX="538.0" layoutY="76.0" />
+          <Button fx:id="intervalButton" layoutX="722.0" layoutY="44.0" mnemonicParsing="false" onAction="#parseFromInterval" prefHeight="57.0" prefWidth="52.0" text="Поиск" />
+          <ListView fx:id="recordView" layoutX="14.0" layoutY="114.0" onMouseClicked="#selectRecord" prefHeight="585.0" prefWidth="210.0" />
+          <ListView fx:id="sentenceView" layoutX="239.0" layoutY="114.0" onMouseClicked="#getSentenceDescription" prefHeight="222.0" prefWidth="535.0" />
+          <TextArea fx:id="recordDescription" editable="false" layoutX="239.0" layoutY="356.0" prefHeight="343.0" prefWidth="535.0" />
+            <Button fx:id="textOutputButton" layoutX="275.0" layoutY="707.0" mnemonicParsing="false" onAction="#createOutputFile" prefHeight="25.0" prefWidth="200.0" text="Вывод в текстовый файл" />
+            <TextArea fx:id="legendText" editable="false" layoutX="793.0" layoutY="43.0" prefHeight="697.0" prefWidth="535.0" />
+            <Text layoutX="538.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выборка по дате" />
+            <Text layoutX="14.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выбор файла" />
+            <Text layoutX="793.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Легенда" />
+        </AnchorPane>
+      </children>
+   </StackPane>
 </VBox>
