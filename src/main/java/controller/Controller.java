@@ -32,6 +32,18 @@ public class Controller {
 
 
     @FXML
+    public Tab ellipseTab;
+
+    @FXML
+    public Tab geoTab;
+
+    @FXML
+    public Tab parsingTab;
+
+    @FXML
+    public TabPane tabPane;
+
+    @FXML
     private TextField nmeaPath;
 
     @FXML
@@ -53,9 +65,6 @@ public class Controller {
     private TextArea legendText;
 
     @FXML
-    private StackPane stackPane;
-
-    @FXML
     private AnchorPane parsingPane;
 
     @FXML
@@ -64,20 +73,16 @@ public class Controller {
     @FXML
     private AnchorPane geofactorsPane;
 
-    @FXML
-    public Button parsingPaneBtn;
-
-    @FXML
-    public Button geofactorsPlotBtn;
-
-    @FXML
-    public Button ellipsePlotBtn;
-
     private final List<Record> sourceRecords = new ArrayList<>();
 
     private static final String INFO_FILE_NAME = "./info.csv";
 
     private static final String[] INFO_CSV_HEADER = {"longitude","latitude","altitude", "time", "hdop", "vdop", "pdop"};
+
+
+    @FXML
+    private void initialize(){
+    }
 
     @FXML
     private void parseAll(ActionEvent event) {
@@ -159,7 +164,7 @@ public class Controller {
         }
     }
 
-    public void changeToParsingPane(ActionEvent actionEvent) {
+/*    public void changeToParsingPane(ActionEvent actionEvent) {
         parsingPaneBtn.setDefaultButton(true);
         ellipsePlotBtn.setDefaultButton(false);
         geofactorsPlotBtn.setDefaultButton(false);
@@ -196,5 +201,5 @@ public class Controller {
         }
         children.remove(geofactorsPane);
         children.remove(parsingPane);
-    }
+    }*/
 }

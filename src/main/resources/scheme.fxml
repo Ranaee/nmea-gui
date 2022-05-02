@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.ListView?>
@@ -8,11 +7,11 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
@@ -48,50 +47,39 @@
       <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
     </Menu>
   </MenuBar>
-    <HBox prefHeight="100.0" prefWidth="200.0">
-        <VBox.margin>
-            <Insets/>
-        </VBox.margin>
-        <padding>
-            <Insets left="15.0" top="15.0"/>
-        </padding>
-        <Button fx:id="parsingPaneBtn" defaultButton="true" mnemonicParsing="false" onAction="#changeToParsingPane"
-                text="Парсинг NMEA">
-             <HBox.margin>
-                 <Insets right="15.0"/>
-             </HBox.margin>
-        </Button>
-        <Button fx:id="geofactorsPlotBtn" contentDisplay="CENTER" mnemonicParsing="false"
-                onAction="#changeToGeofactorsPlotPane" text="Геометрические факторы" textOverrun="CLIP">
-           <HBox.margin>
-               <Insets right="15.0"/>
-           </HBox.margin>
-        </Button>
-        <Button fx:id="ellipsePlotBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false"
-                onAction="#changeToEllipsePlotPane" text="Эллипс рассеивания">
-           <HBox.margin>
-               <Insets right="15.0"/>
-           </HBox.margin>
-        </Button>
-    </HBox>
-    <StackPane fx:id="stackPane" prefHeight="600.0" prefWidth="1041.0">
-        <AnchorPane fx:id="ellipsePane" prefHeight="200.0" prefWidth="200.0" />
-        <AnchorPane fx:id="geofactorsPane" prefHeight="200.0" prefWidth="200.0" />
-        <AnchorPane fx:id="parsingPane" prefHeight="600.0" prefWidth="1041.0">
-            <TextField fx:id="nmeaPath" layoutX="13.0" layoutY="44.0" prefHeight="25.0" prefWidth="438.0" />
-            <Button layoutX="329.0" layoutY="76.0" mnemonicParsing="false" onAction="#pickFile" prefHeight="25.0" prefWidth="32.0" text="..." />
-            <Button layoutX="375.0" layoutY="76.0" mnemonicParsing="false" onAction="#parseAll" prefHeight="25.0" prefWidth="78.0" text="Открыть" />
-            <DatePicker fx:id="fromPicker" layoutX="538.0" layoutY="44.0" />
-            <DatePicker fx:id="toPicker" layoutX="538.0" layoutY="76.0" />
-            <Button layoutX="722.0" layoutY="44.0" mnemonicParsing="false" onAction="#parseFromInterval" prefHeight="57.0" prefWidth="52.0" text="Поиск" />
-            <ListView fx:id="recordView" layoutX="14.0" layoutY="114.0" onMouseClicked="#selectRecord" prefHeight="585.0" prefWidth="210.0" />
-            <ListView fx:id="sentenceView" layoutX="239.0" layoutY="114.0" onMouseClicked="#getSentenceDescription" prefHeight="222.0" prefWidth="535.0" />
-            <TextArea fx:id="recordDescription" editable="false" layoutX="239.0" layoutY="356.0" prefHeight="343.0" prefWidth="535.0" />
-            <Button layoutX="275.0" layoutY="707.0" mnemonicParsing="false" onAction="#createOutputFile" prefHeight="25.0" prefWidth="200.0" text="Вывод в текстовый файл" />
-            <TextArea fx:id="legendText" editable="false" layoutX="793.0" layoutY="43.0" prefHeight="697.0" prefWidth="535.0" />
-            <Text layoutX="538.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выборка по дате" />
-            <Text layoutX="14.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выбор файла" />
-            <Text layoutX="793.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Легенда" />
-        </AnchorPane>
-    </StackPane>
+   <TabPane fx:id="tabPane" prefHeight="32.0" prefWidth="1341.0" tabClosingPolicy="UNAVAILABLE">
+     <tabs>
+         <Tab fx:id="parsingTab" text="Парсинг NMEA">
+             <content>
+                 <AnchorPane fx:id="parsingPane" prefHeight="761.0" prefWidth="1341.0">
+                     <TextField fx:id="nmeaPath" layoutX="13.0" layoutY="44.0" prefHeight="25.0" prefWidth="438.0" />
+                     <Button layoutX="329.0" layoutY="76.0" mnemonicParsing="false" onAction="#pickFile" prefHeight="25.0" prefWidth="32.0" text="..." />
+                     <Button layoutX="375.0" layoutY="76.0" mnemonicParsing="false" onAction="#parseAll" prefHeight="25.0" prefWidth="78.0" text="Открыть" />
+                     <DatePicker fx:id="fromPicker" layoutX="538.0" layoutY="44.0" />
+                     <DatePicker fx:id="toPicker" layoutX="538.0" layoutY="76.0" />
+                     <Button layoutX="722.0" layoutY="44.0" mnemonicParsing="false" onAction="#parseFromInterval" prefHeight="57.0" prefWidth="52.0" text="Поиск" />
+                     <ListView fx:id="recordView" layoutX="14.0" layoutY="114.0" onMouseClicked="#selectRecord" prefHeight="585.0" prefWidth="210.0" />
+                     <ListView fx:id="sentenceView" layoutX="239.0" layoutY="114.0" onMouseClicked="#getSentenceDescription" prefHeight="222.0" prefWidth="535.0" />
+                     <TextArea fx:id="recordDescription" editable="false" layoutX="239.0" layoutY="356.0" prefHeight="343.0" prefWidth="535.0" />
+                     <Button layoutX="275.0" layoutY="707.0" mnemonicParsing="false" onAction="#createOutputFile" prefHeight="25.0" prefWidth="200.0" text="Вывод в текстовый файл" />
+                     <TextArea fx:id="legendText" editable="false" layoutX="793.0" layoutY="43.0" prefHeight="697.0" prefWidth="535.0" />
+                     <Text layoutX="538.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выборка по дате" />
+                     <Text layoutX="14.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выбор файла" />
+                     <Text layoutX="793.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Легенда" />
+                 </AnchorPane>
+             </content>
+         </Tab>
+         <Tab fx:id="geoTab" text="Геометрические факторы">
+             <content>
+                 <AnchorPane fx:id="geofactorsPane" prefHeight="200.0" prefWidth="273.0"/>
+             </content>
+         </Tab>
+         <Tab fx:id="ellipseTab" text="Эллипс рассеивания">
+             <content>
+                 <AnchorPane fx:id="ellipsePane" prefHeight="200.0" prefWidth="200.0"/>
+             </content>
+         </Tab>
+     </tabs>
+   </TabPane>
+
 </VBox>
