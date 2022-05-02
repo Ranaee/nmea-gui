@@ -4,7 +4,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import parser.PacketParser;
-import parser.Position;
 import parser.Record;
 
 import java.io.File;
@@ -32,17 +31,13 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
-//        parseConsole();
     }
 
+    /**
+     * Use only for debug!!!
+     */
     private static void parseConsole() {
         File testText = new File("small.txt");
-//        List<Record> records = PacketParser.parse(testText, false);
-        List<Record> recordsNoLimit = PacketParser.parse(testText);
-        List<Record> recordsWithoutGSV = PacketParser.parse(testText, true);
-//        Sentence sn = records.get(0).getFields().get(0);
-//        boolean result = records.stream().flatMap(x->x.getFields().stream()).anyMatch(x->"GSV".equals(x.getSentenceId()));
-//        String string = PacketParser.getSentenceDescription(sn);
-        boolean t = true;
+        List<Record> records = PacketParser.parse(testText);
     }
 }
