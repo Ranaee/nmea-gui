@@ -5,6 +5,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.ZDASentence;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 
 public class Controller {
 
+
     @FXML
     private TextField nmeaPath;
 
@@ -46,6 +49,27 @@ public class Controller {
 
     @FXML
     private TextArea legendText;
+
+    @FXML
+    private StackPane stackPane;
+
+    @FXML
+    private AnchorPane parsingPane;
+
+    @FXML
+    private AnchorPane ellipsePane;
+
+    @FXML
+    private AnchorPane geofactorsPane;
+
+    @FXML
+    public Button parsingPaneBtn;
+
+    @FXML
+    public Button geofactorsPlotBtn;
+
+    @FXML
+    public Button ellipsePlotBtn;
 
     private final List<Record> sourceRecords = new ArrayList<>();
 
