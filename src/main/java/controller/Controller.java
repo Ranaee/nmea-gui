@@ -1,14 +1,13 @@
 package controller;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.ZDASentence;
@@ -20,6 +19,7 @@ import parser.Record;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -73,12 +73,27 @@ public class Controller {
     @FXML
     private AnchorPane geofactorsPane;
 
+    @FXML
+    private WebView geofactorsWebView;
+
     private final List<Record> sourceRecords = new ArrayList<>();
 
     private static final String INFO_FILE_NAME = "./info.csv";
 
     private static final String[] INFO_CSV_HEADER = {"longitude","latitude","altitude", "time", "hdop", "vdop", "pdop"};
 
+    private static final String HDOP_HTML = "index.html";
+
+    @FXML
+    private void initialize(){
+        WebEngine engine = geofactorsWebView.getEngine();
+        URL url = getClass().getClassLoader().getResource(HDOP_HTML);
+        if (url != null){
+            engine.load(url.toString());
+        } else {
+            throw new IllegalStateException("Resource not found: index.html");
+        }
+    }
 
     @FXML
     private void parseAll(ActionEvent event) {
