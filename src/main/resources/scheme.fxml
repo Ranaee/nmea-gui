@@ -79,6 +79,8 @@
             <Text layoutX="14.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Выбор файла" />
             <Text layoutX="793.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Легенда" />
         </AnchorPane>
+         <AnchorPane fx:id="ellipsePane" prefHeight="200.0" prefWidth="200.0" />
+         <AnchorPane fx:id="geofactorsPane" prefHeight="200.0" prefWidth="200.0" />
       </children>
    </StackPane>
 </VBox>
