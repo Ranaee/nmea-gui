@@ -104,7 +104,11 @@ public class Controller {
                 return;
             }
             File file = new File(path);
-            sourceRecords.addAll(PacketParser.parse(file));
+            try {
+                sourceRecords.addAll(PacketParser.parse(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         recordView.setItems(FXCollections.observableList(sourceRecords));
     }

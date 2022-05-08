@@ -19,13 +19,10 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static net.sf.marineapi.nmea.sentence.SentenceId.RMC;
-
 /**
  * Парсер файлов протокола NMEA.
- * Данный парсер поддерживает входные файлы, разделяемые на записи/пакеты из N предложений (8 предложений по умолчанию);
- * Каждая запись состоит из следующих предложений в указанном порядке: RMC, GGA, GSA, GSA, VTG, ZDA, GLL, TKU;
- * Парсер позволяет создавать CSV-файл, содержащий координаты, соответствующие каждой записи.
+ * Данный парсер поддерживает входные файлы, разделяемые на записи/пакеты из N предложений, каждое запись начинается с предложения типа GGA;
+ * Парсер позволяет создавать CSV-файлы, содержащий координаты, соответствующие каждой записи.
  */
 public class PacketParser {
 
@@ -126,11 +123,11 @@ public class PacketParser {
         String sentenceId = sentence.getSentenceId();
         switch (sentenceId) {
             case GGA_STR:
-                return getGGALegend((GGASentence) sentence);
+                return getGGALegend();
             case GLL_STR:
-                return getGLLegend((GLLSentence) sentence);
+                return getGLLegend();
             case GSA_STR:
-                return getGSALegend((GSASentence) sentence);
+                return getGSALegend();
             //case ZDA_STR:
             //    return getZDALegend((ZDASentence) sentence);
             //case RMC_STR:
@@ -138,36 +135,32 @@ public class PacketParser {
             //case GSV_STR:
             //    return getGSVLegend((GSVSentence) sentence);
             case VTG_STR:
-                return getVTGLegend((VTGSentence) sentence);
+                return getVTGLegend();
             default:
                 return UNKNOWN_SENTENCE_TYPE;
         }
     }
 
 
-    private static String getVTGLegend(VTGSentence vtgSentence) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Курс на истинный полюс в градусах - x.x" +
-                "\nФлаг достоверности курса - 'T'-True(Достоверный) / 'F'-False(Недостоверный)" +
-                "\nМагнитное склонение в градусах (может не использоваться) - x.x" +
-                "\nОтносительно северного магнитного полюса (может не использоваться) - М(Магнитный)" +
-                "\nСкорость - s.ss" +
-                "\nЕдиница измерения скорости, узлы - N" +
-                "\nСкорость - s.ss" +
-                "\nЕдиница измерения скорости, км/ч - К" +
-                "\nСпособ вычисления скорости и курса: 'A' - автономный." +
-                "\n'D' - дифференциальный;\n" +
-                "'E' - аппроксимация;\n" +
-                "'M' - фиксированные данные;\n" +
-                "'N' - недостоверные данные;" +
-                "\nКонтрольная сумма строки - *hh");
-        builder.append("\n");
-        return builder.toString();
+    private static String getVTGLegend() {
+        return "Курс на истинный полюс в градусах - x.x" +
+        "\nФлаг достоверности курса - 'T'-True(Достоверный) / 'F'-False(Недостоверный)" +
+        "\nМагнитное склонение в градусах (может не использоваться) - x.x" +
+        "\nОтносительно северного магнитного полюса (может не использоваться) - М(Магнитный)" +
+        "\nСкорость - s.ss" +
+        "\nЕдиница измерения скорости, узлы - N" +
+        "\nСкорость - s.ss" +
+        "\nЕдиница измерения скорости, км/ч - К" +
+        "\nСпособ вычисления скорости и курса: 'A' - автономный." +
+        "\n'D' - дифференциальный;\n" +
+        "'E' - аппроксимация;\n" +
+        "'M' - фиксированные данные;\n" +
+        "'N' - недостоверные данные;" +
+        "\nКонтрольная сумма строки - *hh\n";
     }
 
-    private static String getGSALegend(GSASentence gsaSentence) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Режим выбора формата 2D/3D: 'M' — ручной, принудительно включен 2D или 3D режим;\n" +
+    private static String getGSALegend() {
+        return "Режим выбора формата 2D/3D: 'M' — ручной, принудительно включен 2D или 3D режим;\n" +
                 "A — автоматический, разрешено автоматически выбирать 2D или 3D режим.\n" +
                 "Режим выбранного формата: '1'- Местоположение не определено / '2'- 2D / '3'- 3D\n" +
                 "ID активного спутника (максимум 12 спутников) - xx\n" +
@@ -175,14 +168,11 @@ public class PacketParser {
                 "Горизонтальный геометрический фактор ухудшения точности (HDOP) - x.x\n" +
                 "Вертикальный геометрический фактор ухудшения точности (VDOP) - x.x\n" +
                 "Номер навигационной системы (1-GPS \"GP\", 2-Glonass \"GL\",, 3-Galileo \"GA\", 4-Beidu \"BD\"; \"GN\" - источник данных GPS+Glonass)\n" +
-                "Контрольная сумма строки - *hh");
-        builder.append("\n");
-        return builder.toString();
+                "Контрольная сумма строки - *hh\n";
     }
 
-    private static String getGLLegend(GLLSentence gllSentence) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Широта - xxxx.xx\n" +
+    private static String getGLLegend() {
+        return "Широта - xxxx.xx\n" +
                 "Направление широты: 'N'-север / 'S'-юг\n" +
                 "Долгота - yyyy.yy\n" +
                 "Направление долготы: 'E'-восток / 'W'-запад\n" +
@@ -194,113 +184,51 @@ public class PacketParser {
                 "'E' - аппроксимация;\n" +
                 "'M' - фиксированные данные;\n" +
                 "'N' - недостоверные данные.\n" +
-                "Контрольная сумма строки - *hh");
-        builder.append("\n");
-        return builder.toString();
+                "Контрольная сумма строки - *hh\n";
     }
 
-    private static String getGGALegend(GGASentence ggaSentence) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Время UTC - hhmmss.ss\n" +
-                "Широта - xxxx.xx\n" +
-                "Направление широты: 'N'-север / 'S'-юг\n" +
-                "Долгота - xxxx.xx\n" +
-                "Направление долготы: 'E'-восток / 'W'-запад\n" +
-                "Индикатор качества GPS сигнала: '0' - недоступно.\n" +
-                "'1' - автономно;\n" +
-                "'2' - дифференциально;\n" +
-                "'3' - PPS;\n" +
-                "'4' - фиксированный RTK;\n" +
-                "'5' - не фиксированный RTK;\n" +
-                "'6' - экстраполяция;\n" +
-                "'7' - фиксированные координаты;\n" +
-                "'8' - режим симуляции;\n" +
-                "Количество активных спутников, от \"00\" до \"12\"\n" +
-                "Горизонтальный геометрический фактор ухудшения точности (HDOP)\n" +
-                "Высота над уровнем моря - xxx\n" +
-                "Единицы измерения высоты в метрах - M\n" +
-                "Разница между эллипсоидом земли и уровнем моря - x.x\n" +
-                "Единицы измерения в метрах - M\n" +
-                "Количество секунд прошедших с получения последней DGPS поправки - x.x\n" +
-                "ID базовой станции предоставляющей DGPS поправки (если включено DGPS) - xxxx\n" +
-                "Контрольная сумма строки - *hh");
-        builder.append("\n");
-        return builder.toString();
+    private static String getGGALegend() {
+        return "Время UTC - hhmmss.ss\n" +
+        "Широта - xxxx.xx\n" +
+        "Направление широты: 'N'-север / 'S'-юг\n" +
+        "Долгота - xxxx.xx\n" +
+        "Направление долготы: 'E'-восток / 'W'-запад\n" +
+        "Индикатор качества GPS сигнала: '0' - недоступно.\n" +
+        "'1' - автономно;\n" +
+        "'2' - дифференциально;\n" +
+        "'3' - PPS;\n" +
+        "'4' - фиксированный RTK;\n" +
+        "'5' - не фиксированный RTK;\n" +
+        "'6' - экстраполяция;\n" +
+        "'7' - фиксированные координаты;\n" +
+        "'8' - режим симуляции;\n" +
+        "Количество активных спутников, от \"00\" до \"12\"\n" +
+        "Горизонтальный геометрический фактор ухудшения точности (HDOP)\n" +
+        "Высота над уровнем моря - xxx\n" +
+        "Единицы измерения высоты в метрах - M\n" +
+        "Разница между эллипсоидом земли и уровнем моря - x.x\n" +
+        "Единицы измерения в метрах - M\n" +
+        "Количество секунд прошедших с получения последней DGPS поправки - x.x\n" +
+        "ID базовой станции предоставляющей DGPS поправки (если включено DGPS) - xxxx\n" +
+        "Контрольная сумма строки - *hh\n";
     }
 
-
-
-    //TODO Нужно разобраться оставить ли этот метод, он нигде не используется и ошибочный
-    public static List<Record> parse(File nmeaFile, boolean parseGSV) {
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(nmeaFile));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+    public static List<Record> parse(File nmeaFile) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(nmeaFile));
         SentenceFactory sentenceFactory = SentenceFactory.getInstance();
         List<Record> records = new ArrayList<>();
         boolean endOfTheLoop = false;
         int i = 0;
+        String line;
+        String firstLine = null;
         while (true) {
             List<Sentence> sentences = new ArrayList<>();
-            for (int j = 0; j < PACKET_LENGTH; j++) {
-                String line = null;
-                try {
-                    if (reader != null) {
-                        line = reader.readLine();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (line == null) {
-                    records.add(new Record(sentences, i));
-                    endOfTheLoop = true;
-                    break;
-                }
-                try {
-                    Sentence sentence = sentenceFactory.createParser(line);
-                    if (parseGSV || !"GSV".equals(sentence.getSentenceId())) {
-                        sentences.add(sentence);
-                    }
-                } catch (UnsupportedSentenceException e) {
-                    sentences.add(new UnknownParser(line));
-                }
-            }
-            if (endOfTheLoop) {
-                break;
-            }
-            i++;
-            records.add(new Record(sentences, i));
-        }
-        return records;
-    }
-
-    public static List<Record> parse(File nmeaFile) {
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(nmeaFile));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        SentenceFactory sentenceFactory = SentenceFactory.getInstance();
-        List<Record> records = new ArrayList<>();
-        boolean endOfTheLoop = false;
-        int i = 0;
-        while (true) {
-            List<Sentence> sentences = new ArrayList<>();
-            Sentence sentence = null;
-            boolean start = true;
-            while (start || sentence.getSentenceId() != null) {
-                start = false;
-                String line = null;
-                try {
-                    if (reader != null) {
-                        line = reader.readLine();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            Sentence sentence;
+            boolean packetStarted = false;
+            boolean startOfPacket = true;
+            while (startOfPacket || packetStarted){
+                line = firstLine == null ? reader.readLine() : firstLine;
+                firstLine = null;
                 if (line == null) {
                     records.add(new Record(sentences, i));
                     endOfTheLoop = true;
@@ -308,7 +236,21 @@ public class PacketParser {
                 }
                 try {
                     sentence = sentenceFactory.createParser(line);
+                    boolean isGGA = sentence.getSentenceId().equals(GGA_STR);
+                    if (isGGA){
+                        if (packetStarted) {
+                            packetStarted = false;
+                            firstLine = line;
+                            continue;
+                        } else {
+                            packetStarted = true;
+                        }
+                    }
+                    if (!packetStarted){
+                        continue;
+                    }
                     sentences.add(sentence);
+                    startOfPacket = false;
                 } catch (UnsupportedSentenceException e) {
                     sentence = new UnknownParser(line);
                     sentences.add(sentence);
@@ -320,7 +262,7 @@ public class PacketParser {
             i++;
             records.add(new Record(sentences, i));
         }
-        boolean correctRecords = records.stream().allMatch(x -> x.getSentences().get(0).getSentenceId().equals(RMC.toString()));
+        boolean correctRecords = records.stream().allMatch(x -> x.getSentences().get(0).getSentenceId().equals(GGA_STR));
         if (!correctRecords) {
             System.out.println("Incorrect file format");
         }
@@ -338,7 +280,7 @@ public class PacketParser {
             case GLL_STR:
                 return getGLLDesription((GLLSentence) sentence);
             case GSA_STR:
-                return getGSADesription((GSASentence) sentence);
+                return getGSDDescription((GSASentence) sentence);
             case ZDA_STR:
                 return getZDADesription((ZDASentence) sentence);
             case RMC_STR:
@@ -451,7 +393,7 @@ public class PacketParser {
         return builder.toString();
     }
 
-    private static String getGSADesription(GSASentence gsaSentence) {
+    private static String getGSDDescription(GSASentence gsaSentence) {
         StringBuilder builder = new StringBuilder();
         builder.append("Режим выбора формата 2D/3D: ");
         builder.append(gsaSentence.getMode());
@@ -580,14 +522,14 @@ public class PacketParser {
         builder.append("\n");
         builder.append("Данные о спутниках: ");
         builder.append("\n");
-        gsvSentence.getSatelliteInfo().stream().forEach(x->{
-            builder.append("\tID спутника: " + x.getId());
+        gsvSentence.getSatelliteInfo().forEach(x->{
+            builder.append("\tID спутника: ").append(x.getId());
             builder.append("\n");
-            builder.append("\tВысота: " + x.getElevation());
+            builder.append("\tВысота: ").append(x.getElevation());
             builder.append("\n");
-            builder.append("\tАзимут истинный: " + x.getAzimuth());
+            builder.append("\tАзимут истинный: ").append(x.getAzimuth());
             builder.append("\n");
-            builder.append("\tОтношение «сигнал — шум»: " + x.getNoise());
+            builder.append("\tОтношение «сигнал — шум»: ").append(x.getNoise());
             builder.append("\n");
         });
         //builder.append(elevation);
