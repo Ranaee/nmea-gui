@@ -7,6 +7,7 @@ import parser.PacketParser;
 import parser.Record;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
@@ -30,14 +31,22 @@ public class Main extends Application {
 
 
     public static void main(String[] args) {
-        launch(args);
+//        launch(args);
+        parseConsole();
     }
 
     /**
      * Use only for debug!!!
      */
     private static void parseConsole() {
-        File testText = new File("small.txt");
-        List<Record> records = PacketParser.parse(testText);
+        File testText = new File("test_all_nmea.txt");
+        List<Record> records;
+        try {
+            records = PacketParser.parse(testText);
+            PacketParser.createDOPCsv(records);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        boolean b = true;
     }
 }

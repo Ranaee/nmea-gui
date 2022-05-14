@@ -169,7 +169,7 @@ public class Controller {
             sources.forEach(x->{
                 try {
                     printer.printRecord(x.getLongitude(), x.getLatitude(), x.getAltitude(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
-                            .toEpochMilli(), x.gethDOP(), x.getvDOP(), x.getpDOP());
+                            .toEpochMilli(), x.getHDOP(), x.getVDOP(), x.getPDOP());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }

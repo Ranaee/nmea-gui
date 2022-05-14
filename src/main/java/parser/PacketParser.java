@@ -16,8 +16,10 @@ import sentence.UnknownSentence;
 
 import java.io.*;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Парсер файлов протокола NMEA.
@@ -74,15 +76,15 @@ public class PacketParser {
             this.altitude = 0;
         }
 
-        public double gethDOP() {
+        public double getHDOP() {
             return hDOP;
         }
 
-        public double getvDOP() {
+        public double getVDOP() {
             return vDOP;
         }
 
-        public double getpDOP() {
+        public double getPDOP() {
             return pDOP;
         }
 
@@ -95,12 +97,12 @@ public class PacketParser {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             DopDTO dopDTO = (DopDTO) o;
-            return Double.compare(dopDTO.hDOP, hDOP) == 0 && Double.compare(dopDTO.vDOP, vDOP) == 0 && Double.compare(dopDTO.pDOP, pDOP) == 0 && time == dopDTO.time;
+            return Double.compare(dopDTO.hDOP, hDOP) == 0 && Double.compare(dopDTO.vDOP, vDOP) == 0 && Double.compare(dopDTO.pDOP, pDOP) == 0 && Double.compare(dopDTO.longitude, longitude) == 0 && Double.compare(dopDTO.latitude, latitude) == 0 && Double.compare(dopDTO.altitude, altitude) == 0 && time.equals(dopDTO.time);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(hDOP, vDOP, pDOP, time);
+            return Objects.hash(hDOP, vDOP, pDOP, longitude, latitude, altitude, time);
         }
 
         public double getLongitude() {
@@ -586,20 +588,10 @@ public class PacketParser {
     public static File createDOPCsv(List<Record> records){
         File outputFile = new File(DOP_FILE_NAME);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DOP_CSV_HEADER))){
-            HashSet<DopDTO> dopSet = new HashSet<>();
-            for (Record x : records){
-                List<Sentence> sentences = x.getSentences();
-                Optional<Sentence> gsaSentenceOpt = sentences.stream().filter(sentence->sentence.getSentenceId().equals(GSA_STR)).findFirst();
-                Optional<Sentence> zdaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId().equals(ZDA_STR)).findFirst();
-                if (gsaSentenceOpt.isPresent() && zdaSentenceOpt.isPresent()){
-                    GSASentence gsaSentence = (GSASentence) gsaSentenceOpt.get();
-                    ZDASentence zdaSentence = (ZDASentence) zdaSentenceOpt.get();
-                    dopSet.add(new DopDTO(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP(), mapNmeaTimeToJavaTime(zdaSentence)));
-                }
-            }
+            Set<DopDTO> dopSet = getDopDTOList(records).stream().map(x->new DopDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime())).collect(Collectors.toSet());
             dopSet.forEach(x->{
                 try {
-                    printer.printRecord(x.gethDOP(), x.getvDOP(), x.getpDOP(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
+                    printer.printRecord(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
                             .toEpochMilli());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
@@ -629,11 +621,11 @@ public class PacketParser {
         return result;
     }
 
-    public static LocalDateTime mapNmeaTimeToJavaTime(Date date, int localZoneHours, int localZoneMinutes){
-        return LocalDateTime.of(date.getYear(), date.getMonth(), date.getDay(), localZoneHours, localZoneMinutes);
+    public static LocalDateTime mapNmeaTimeToJavaTime(Date date, Time time){
+        return LocalDateTime.of(date.getYear(), Month.of(date.getMonth()), date.getDay(), time.getHour(), time.getMinutes(), (int) time.getSeconds());
     }
 
     public static LocalDateTime mapNmeaTimeToJavaTime(ZDASentence zdaSentence){
-        return mapNmeaTimeToJavaTime(zdaSentence.getDate(), zdaSentence.getLocalZoneHours(), zdaSentence.getLocalZoneMinutes());
+        return mapNmeaTimeToJavaTime(zdaSentence.getDate(), zdaSentence.getTime());
     }
 }
