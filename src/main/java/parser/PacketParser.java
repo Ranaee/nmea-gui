@@ -610,9 +610,9 @@ public class PacketParser {
         List<DopDTO> result = new ArrayList<>();
         for (Record x : records){
             List<Sentence> sentences = x.getSentences();
-            Optional<Sentence> gsaSentenceOpt = sentences.stream().filter(sentence->sentence.getSentenceId().equals(GSA_STR)).findFirst();
-            Optional<Sentence> zdaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId().equals(ZDA_STR)).findFirst();
-            Optional<Sentence> ggaSentenceOpt = sentences.stream().filter(sentence->sentence.getSentenceId().equals(GGA_STR)).findFirst();
+            Optional<Sentence> gsaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId() != null && sentence.getSentenceId().equals(GSA_STR)).findFirst();
+            Optional<Sentence> zdaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId() != null && sentence.getSentenceId().equals(ZDA_STR)).findFirst();
+            Optional<Sentence> ggaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId() != null && sentence.getSentenceId().equals(GGA_STR)).findFirst();
             if (gsaSentenceOpt.isPresent() && zdaSentenceOpt.isPresent() && ggaSentenceOpt.isPresent()){
                 GSASentence gsaSentence = (GSASentence) gsaSentenceOpt.get();
                 ZDASentence zdaSentence = (ZDASentence) zdaSentenceOpt.get();
