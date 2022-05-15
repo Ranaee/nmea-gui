@@ -588,8 +588,10 @@ public class PacketParser {
     public static File createDOPCsv(List<Record> records){
         File outputFile = new File(DOP_FILE_NAME);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DOP_CSV_HEADER))){
-            Set<DopDTO> dopSet = getDopDTOList(records).stream().map(x->new DopDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime())).collect(Collectors.toSet());
-            dopSet.forEach(x->{
+            List<DopDTO> dopList = getDopDTOList(records).stream().map(x->new DopDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime())).collect(Collectors.toList());
+            TreeSet<DopDTO> sortedSet = new TreeSet<>(Comparator.comparing(DopDTO::getTime));
+            sortedSet.addAll(dopList);
+            sortedSet.forEach(x->{
                 try {
                     printer.printRecord(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
                             .toEpochMilli());
