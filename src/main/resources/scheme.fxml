@@ -68,13 +68,9 @@
             </AnchorPane>
         </Tab>
         <Tab text="Геометрические факторы">
-            <AnchorPane fx:id="geofactorsPane" prefHeight="0.0" prefWidth="1341.0">
-                <WebView fx:id="geofactorsWebView" layoutX="132.0" layoutY="174.0" prefHeight="414.0"
-                         prefWidth="1078.0"/>
+            <AnchorPane fx:id="geofactorsPane" prefHeight="761.0" prefWidth="1341.0">
+                <WebView fx:id="geofactorsWebView" prefHeight="761.0" prefWidth="1341.0"/>
             </AnchorPane>
-        </Tab>
-        <Tab text="Эллипс рассеивания">
-            <AnchorPane fx:id="ellipsePane" prefHeight="200.0" prefWidth="200.0" />
         </Tab>
     </TabPane>
 
