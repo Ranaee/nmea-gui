@@ -1,5 +1,6 @@
 package parser;
 
+import exception.DataUnavailableException;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
@@ -624,10 +625,21 @@ public class PacketParser {
     }
 
     public static LocalDateTime mapNmeaTimeToJavaTime(Date date, Time time){
-        return LocalDateTime.of(date.getYear(), Month.of(date.getMonth()), date.getDay(), time.getHour(), time.getMinutes(), (int) time.getSeconds());
+        if (time != null) {
+            return LocalDateTime.of(date.getYear(), Month.of(date.getMonth()), date.getDay(), time.getHour(), time.getMinutes(), (int) time.getSeconds());
+        } else {
+            return LocalDateTime.of(date.getYear(), Month.of(date.getMonth()), date.getDay(), 0, 0, 0);
+        }
     }
 
     public static LocalDateTime mapNmeaTimeToJavaTime(ZDASentence zdaSentence){
-        return mapNmeaTimeToJavaTime(zdaSentence.getDate(), zdaSentence.getTime());
+        Time time;
+        try {
+            time = zdaSentence.getTime();
+        }
+        catch (DataUnavailableException exception) {
+            time = null;
+        }
+        return mapNmeaTimeToJavaTime(zdaSentence.getDate(), time);
     }
 }
