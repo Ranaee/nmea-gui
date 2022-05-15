@@ -131,12 +131,12 @@ public class PacketParser {
                 return getGLLegend();
             case GSA_STR:
                 return getGSALegend();
-            //case ZDA_STR:
-            //    return getZDALegend((ZDASentence) sentence);
-            //case RMC_STR:
-             //   return getRMCLegend((RMCSentence) sentence);
-            //case GSV_STR:
-            //    return getGSVLegend((GSVSentence) sentence);
+            case ZDA_STR:
+                return getZDALegend();
+            case RMC_STR:
+                return getRMCLegend();
+            case GSV_STR:
+                return getGSVLegend();
             case VTG_STR:
                 return getVTGLegend();
             default:
@@ -214,6 +214,44 @@ public class PacketParser {
         "Количество секунд прошедших с получения последней DGPS поправки - x.x\n" +
         "ID базовой станции предоставляющей DGPS поправки (если включено DGPS) - xxxx\n" +
         "Контрольная сумма строки - *hh\n";
+    }
+
+    private static String getZDALegend() {
+        return "Время UTC - hhmmss.ss\n" +
+                "День - xx\n" +
+                "Месяц - xx\n" +
+                "Год - xxxx\n" +
+                "Часовой пояс, смещение от GMT, от 00 до +-13 часов" +
+                "Часовой пояс, смещение от GMT, минуты" +
+                "Контрольная сумма строки - *hh\n";
+    }
+
+    private static String getRMCLegend() {
+        return "Время UTC - hhmmss.ss\n" +
+                "Статус:\n" +
+                " А - данные верны;\n" +
+                "V - данные не верны\n" +
+                "Географическая широта -xxxx.xx\n" +
+                "Север / Юг(N / S)\n" +
+                "Географическая долгота -yyyy.yy\n" +
+                "Запад / Восток(E / W)\n" +
+                "Скорость в узлах - x.x\n" +
+                "Направление движения в градусах -x.x\n" +
+                "Дата на момент определения местоположения - ddmmyy\n" +
+                "Магнитное склонения в градусах -x.x\n" +
+                "Магнитное склонение на Запад/Восток(E / W)\n" +
+                "Контрольная сумма строки - *hh\n";
+    }
+
+    private static String getGSVLegend() {
+        return "Полное число сообщений - x\n" +
+                "Номер сообщения - x\n" +
+                "Полное число видимых спутников - xx\n" +
+                "PRN номер спутника - xx\n" +
+                "Высота, градусы - xx\n" +
+                "Азимут истинный, градусы - xxx\n" +
+                "Далее повторение для остальных спутников\n" +
+                "Контрольная сумма строки - *hh\n";
     }
 
     public static List<Record> parse(File nmeaFile) throws IOException {
