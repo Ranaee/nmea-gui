@@ -1,6 +1,5 @@
 package parser;
 
-import exception.DataUnavailableException;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
@@ -462,7 +461,15 @@ public class PacketParser {
 
     private static String getZDADesription(ZDASentence zdaSentence) {
         StringBuilder builder = new StringBuilder();
-        Time time = zdaSentence.getTime();
+        Time time;
+        try {
+            time = zdaSentence.getTime();
+        }
+        catch (DataNotAvailableException exception) {
+            zdaSentence.setLocalZoneHours(0);
+            zdaSentence.setLocalZoneMinutes(0);
+            time = zdaSentence.getTime();
+        }
         Date date = zdaSentence.getDate();
         builder.append("Время UTC: ");
         builder.append(time.getHour());
@@ -608,7 +615,7 @@ public class PacketParser {
         File outputFile = new File(POSITION_FILE_NAME);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(POSITION_CSV_HEADER))) {
             records.forEach(x -> {
-                RMCSentence sentence = (RMCSentence) x.getSentences().get(0);
+                GGASentence sentence = (GGASentence) x.getSentences().get(0);
                 Position position = sentence.getPosition();
                 try {
                     printer.printRecord(position.getLatitude(), position.getLongitude());
@@ -656,7 +663,17 @@ public class PacketParser {
                 GSASentence gsaSentence = (GSASentence) gsaSentenceOpt.get();
                 ZDASentence zdaSentence = (ZDASentence) zdaSentenceOpt.get();
                 GGASentence ggaSentence = (GGASentence) ggaSentenceOpt.get();
-                result.add(new DopDTO(gsaSentence.getHorizontalDOP(), gsaSentence.getVerticalDOP(), gsaSentence.getPositionDOP(), mapNmeaTimeToJavaTime(zdaSentence), ggaSentence.getPosition().getLongitude(), ggaSentence.getPosition().getLatitude(), ggaSentence.getAltitude()));
+                double hDOP;
+                double vDOP;
+                double pDOP;
+                try {
+                    hDOP = gsaSentence.getHorizontalDOP();
+                    vDOP = gsaSentence.getVerticalDOP();
+                    pDOP = gsaSentence.getPositionDOP();
+                } catch (DataNotAvailableException exception) {
+                    continue;
+                }
+                result.add(new DopDTO(hDOP, vDOP, pDOP, mapNmeaTimeToJavaTime(zdaSentence), ggaSentence.getPosition().getLongitude(), ggaSentence.getPosition().getLatitude(), ggaSentence.getAltitude()));
             }
         }
         return result;
@@ -675,8 +692,10 @@ public class PacketParser {
         try {
             time = zdaSentence.getTime();
         }
-        catch (DataUnavailableException exception) {
-            time = null;
+        catch (DataNotAvailableException exception) {
+            zdaSentence.setLocalZoneHours(0);
+            zdaSentence.setLocalZoneMinutes(0);
+            time = zdaSentence.getTime();
         }
         return mapNmeaTimeToJavaTime(zdaSentence.getDate(), time);
     }

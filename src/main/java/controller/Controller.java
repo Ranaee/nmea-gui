@@ -80,7 +80,7 @@ public class Controller {
 
     private static final String INFO_FILE_NAME = "./info.csv";
 
-    private static final String[] INFO_CSV_HEADER = {"longitude","latitude","altitude", "time", "hdop", "vdop", "pdop"};
+    private static final String[] INFO_CSV_HEADER = {"time", "longitude","latitude","altitude",  "hdop", "vdop", "pdop"};
 
     private static final String HDOP_HTML = "index.html";
 
@@ -168,8 +168,7 @@ public class Controller {
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(INFO_CSV_HEADER))){
             sources.forEach(x->{
                 try {
-                    printer.printRecord(x.getLongitude(), x.getLatitude(), x.getAltitude(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
-                            .toEpochMilli(), x.getHDOP(), x.getVDOP(), x.getPDOP());
+                    printer.printRecord(x.getTime(), x.getLongitude(), x.getLatitude(), x.getAltitude(),  x.getHDOP(), x.getVDOP(), x.getPDOP());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }
