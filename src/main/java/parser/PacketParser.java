@@ -15,9 +15,7 @@ import sentence.UnknownParser;
 import sentence.UnknownSentence;
 
 import java.io.*;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,6 +43,8 @@ public class PacketParser {
     private static final String GLL_STR = "GLL";
 
     private static final String UNKNOWN_SENTENCE_TYPE = "Неизвестный тип записи";
+
+    private static final String WHITESPACE_SPLIT_PATTERN = "\\s+";
 
     public static class DopDTO {
         private final double hDOP;
@@ -117,6 +117,52 @@ public class PacketParser {
             return altitude;
         }
     }
+
+    public static class InertialDTO {
+
+        private final LocalTime time;
+        private final double latitude;
+        private final double longitude;
+        private final double hEll;
+        private final double sdHoriz;
+        private final double sdHeight;
+
+
+        public InertialDTO(LocalTime time, double latitude, double longitude, double hEll, double sdHoriz, double sdHeight) {
+            this.time = time;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.hEll = hEll;
+            this.sdHoriz = sdHoriz;
+            this.sdHeight = sdHeight;
+        }
+
+
+        public LocalTime getTime() {
+            return time;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public double gethEll() {
+            return hEll;
+        }
+
+        public double getSdHoriz() {
+            return sdHoriz;
+        }
+
+        public double getSdHeight() {
+            return sdHeight;
+        }
+    }
+
 
     public static String getSentenceLegend(Sentence sentence) {
         if (sentence instanceof UnknownSentence) {
@@ -698,5 +744,29 @@ public class PacketParser {
             time = zdaSentence.getTime();
         }
         return mapNmeaTimeToJavaTime(zdaSentence.getDate(), time);
+    }
+
+    public static List<InertialDTO> parseInertialExplorerFile(File inertialFile){
+        List<InertialDTO> result = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(inertialFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                result.add(parseInertialLine(line));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static InertialDTO parseInertialLine(String line){
+        String[] strArr = line.split(WHITESPACE_SPLIT_PATTERN);
+        LocalTime time = LocalTime.parse(strArr[0]);
+        double latitude = Double.parseDouble(strArr[1]);
+        double longtitude = Double.parseDouble(strArr[2]);
+        double hEll = Double.parseDouble(strArr[3]);
+        double sdHoriz = Double.parseDouble(strArr[4]);
+        double sdHeight = Double.parseDouble(strArr[5]);
+        return new InertialDTO(time, latitude, longtitude, hEll, sdHoriz, sdHeight);
     }
 }
