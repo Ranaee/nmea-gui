@@ -15,6 +15,7 @@ import sentence.UnknownParser;
 import sentence.UnknownSentence;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,9 +31,11 @@ public class PacketParser {
 
     private static final String POSITION_FILE_NAME = "./pos.csv";
     private static final String DOP_FILE_NAME = "./dop.csv";
+    private static final String DELTA_FILE_NAME = "./delta.csv";
 
     private static final String[] POSITION_CSV_HEADER = {"pos_x", "pos_y"};
     private static final String[] DOP_CSV_HEADER = {"hdop", "vdop", "pdop"};
+    private static final String[] DELTA_CSV_HEADER = {"latitude", "longitude", "time"};
 
     private static final String GGA_STR = "GGA";
     private static final String GSA_STR = "GSA";
@@ -46,17 +49,17 @@ public class PacketParser {
 
     private static final String WHITESPACE_SPLIT_PATTERN = "\\s+";
 
-    public static class DopDTO {
+    public static class InfoDTO {
         private final double hDOP;
         private final double vDOP;
         private final double pDOP;
         private final double longitude;
         private final double latitude;
         private final double altitude;
-
+        private final int satelliteCount;
         private final LocalDateTime time;
 
-        public DopDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time, double longitude, double latitude, double altitude) {
+        public InfoDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time, double longitude, double latitude, double altitude, int satelliteCount) {
             this.hDOP = hDOP;
             this.vDOP = vDOP;
             this.pDOP = pDOP;
@@ -64,9 +67,10 @@ public class PacketParser {
             this.latitude = latitude;
             this.altitude = altitude;
             this.time = time;
+            this.satelliteCount = satelliteCount;
         }
 
-        public DopDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time) {
+        public InfoDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time) {
             this.hDOP = hDOP;
             this.vDOP = vDOP;
             this.pDOP = pDOP;
@@ -74,6 +78,18 @@ public class PacketParser {
             this.longitude = 0;
             this.latitude = 0;
             this.altitude = 0;
+            this.satelliteCount = 0;
+        }
+
+        public InfoDTO(double latitude, double longitude, LocalDateTime time){
+            this.time = time;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.altitude = 0;
+            this.hDOP = 0;
+            this.vDOP = 0;
+            this.pDOP = 0;
+            this.satelliteCount = 0;
         }
 
         public double getHDOP() {
@@ -88,6 +104,9 @@ public class PacketParser {
             return pDOP;
         }
 
+        public int getSatelliteCount() {
+            return satelliteCount;
+        }
         public LocalDateTime getTime() {
             return time;
         }
@@ -96,8 +115,8 @@ public class PacketParser {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            DopDTO dopDTO = (DopDTO) o;
-            return Double.compare(dopDTO.hDOP, hDOP) == 0 && Double.compare(dopDTO.vDOP, vDOP) == 0 && Double.compare(dopDTO.pDOP, pDOP) == 0 && Double.compare(dopDTO.longitude, longitude) == 0 && Double.compare(dopDTO.latitude, latitude) == 0 && Double.compare(dopDTO.altitude, altitude) == 0 && time.equals(dopDTO.time);
+            InfoDTO infoDTO = (InfoDTO) o;
+            return Double.compare(infoDTO.hDOP, hDOP) == 0 && Double.compare(infoDTO.vDOP, vDOP) == 0 && Double.compare(infoDTO.pDOP, pDOP) == 0 && Double.compare(infoDTO.longitude, longitude) == 0 && Double.compare(infoDTO.latitude, latitude) == 0 && Double.compare(infoDTO.altitude, altitude) == 0 && time.equals(infoDTO.time);
         }
 
         @Override
@@ -162,7 +181,6 @@ public class PacketParser {
             return sdHeight;
         }
     }
-
 
     public static String getSentenceLegend(Sentence sentence) {
         if (sentence instanceof UnknownSentence) {
@@ -678,10 +696,16 @@ public class PacketParser {
 
     @Nullable
     public static File createDOPCsv(List<Record> records){
-        File outputFile = new File(DOP_FILE_NAME);
+       return createDOPCsv(records, null);
+    }
+
+    @Nullable
+    public static File createDOPCsv(List<Record> records, @Nullable String path){
+        String finalPath = path == null ? DOP_FILE_NAME : path;
+        File outputFile = new File(finalPath);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DOP_CSV_HEADER))){
-            List<DopDTO> dopList = getDopDTOList(records).stream().map(x->new DopDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime())).collect(Collectors.toList());
-            TreeSet<DopDTO> sortedSet = new TreeSet<>(Comparator.comparing(DopDTO::getTime));
+            List<InfoDTO> dopList = getDopDTOList(records).stream().map(x->new InfoDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime())).collect(Collectors.toList());
+            TreeSet<InfoDTO> sortedSet = new TreeSet<>(Comparator.comparing(InfoDTO::getTime));
             sortedSet.addAll(dopList);
             sortedSet.forEach(x->{
                 try {
@@ -698,8 +722,8 @@ public class PacketParser {
         }
     }
 
-    public static List<DopDTO> getDopDTOList(List<Record> records){
-        List<DopDTO> result = new ArrayList<>();
+    public static List<InfoDTO> getDopDTOList(List<Record> records){
+        List<InfoDTO> result = new ArrayList<>();
         for (Record x : records){
             List<Sentence> sentences = x.getSentences();
             Optional<Sentence> gsaSentenceOpt = sentences.stream().filter(sentence -> sentence.getSentenceId() != null && sentence.getSentenceId().equals(GSA_STR)).findFirst();
@@ -719,7 +743,7 @@ public class PacketParser {
                 } catch (DataNotAvailableException exception) {
                     continue;
                 }
-                result.add(new DopDTO(hDOP, vDOP, pDOP, mapNmeaTimeToJavaTime(zdaSentence), ggaSentence.getPosition().getLongitude(), ggaSentence.getPosition().getLatitude(), ggaSentence.getAltitude()));
+                result.add(new InfoDTO(hDOP, vDOP, pDOP, mapNmeaTimeToJavaTime(zdaSentence), ggaSentence.getPosition().getLongitude(), ggaSentence.getPosition().getLatitude(), ggaSentence.getAltitude(), ggaSentence.getSatelliteCount()));
             }
         }
         return result;
@@ -768,5 +792,81 @@ public class PacketParser {
         double sdHoriz = Double.parseDouble(strArr[4]);
         double sdHeight = Double.parseDouble(strArr[5]);
         return new InertialDTO(time, latitude, longtitude, hEll, sdHoriz, sdHeight);
+    }
+
+    public static File getDeltaFile(List<InfoDTO> dops, List<InertialDTO> trackList){
+        if (dops.isEmpty()){
+            throw new IllegalStateException("Dop list cannot be empty");
+        }
+        InfoDTO infoDTO = dops.get(0);
+        LocalTime dopLocalTime = infoDTO.time.toLocalTime();
+        if (trackList.isEmpty()){
+            throw new IllegalStateException("Track list cannot be empty");
+        }
+        InertialDTO inertialDTO = trackList.get(0);
+        LocalTime trackTime = inertialDTO.getTime();
+        int comparisonRes = dopLocalTime.compareTo(trackTime);
+        List<InfoDTO> deltaList = null;
+        if (comparisonRes == 0){
+            deltaList = getDeltaListSync(dops, trackList);
+        }
+        if (comparisonRes > 0){
+            List<InertialDTO> syncedTrackList = new ArrayList<>(trackList);
+            for (InertialDTO track : trackList) {
+                if (!track.time.equals(dopLocalTime)) {
+                    syncedTrackList.remove(track);
+                } else {
+                    break;
+                }
+            }
+            if (syncedTrackList.isEmpty()){
+                throw new IllegalStateException("Cannot sync lists by time");
+            }
+            deltaList = getDeltaListSync(dops, syncedTrackList);
+        }
+        if (comparisonRes < 0){
+            List<InfoDTO> syncedInfoList = new ArrayList<>(dops);
+            for (InfoDTO info : dops) {
+                if (!info.time.toLocalTime().equals(trackTime)) {
+                    syncedInfoList.remove(info);
+                } else {
+                    break;
+                }
+            }
+            if (syncedInfoList.isEmpty()){
+                throw new IllegalStateException("Cannot sync lists by time");
+            }
+            deltaList =getDeltaListSync(syncedInfoList, trackList);
+        }
+        File outputFile = new File(DELTA_FILE_NAME);
+        try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DELTA_CSV_HEADER))) {
+            deltaList.forEach(x -> {
+                try {
+                    printer.printRecord(BigDecimal.valueOf(x.getLatitude()).toPlainString(), BigDecimal.valueOf(x.getLongitude()).toPlainString(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
+                            .toEpochMilli());
+                } catch (IOException e) {
+                    System.out.println("Error occurred during writing line");
+                }
+            });
+        } catch (IOException e) {
+            System.out.println("Error occurred during delta file creation");
+            return null;
+        }
+        return new File("");
+    }
+
+    private static List<InfoDTO> getDeltaListSync(List<InfoDTO> dops, List<InertialDTO> trackList){
+        int minSize = Math.min(dops.size(), trackList.size());
+        List<InfoDTO> result = new ArrayList<>();
+        for (int i = 0; i < minSize; i++) {
+            result.add(getDeltaDto(dops.get(i), trackList.get(i)));
+        }
+        return result;
+    }
+
+    private static InfoDTO getDeltaDto(InfoDTO infoDTO, InertialDTO inertialDTO){
+        double latitudeDelta = Math.abs(infoDTO.latitude-inertialDTO.latitude);
+        double longitudeDelta = Math.abs(infoDTO.longitude-inertialDTO.longitude);
+        return new InfoDTO(latitudeDelta, longitudeDelta, infoDTO.time);
     }
 }

@@ -9,6 +9,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
+import net.sf.marineapi.nmea.sentence.GGASentence;
+import net.sf.marineapi.nmea.sentence.GSASentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.ZDASentence;
 import org.apache.commons.csv.CSVFormat;
@@ -21,7 +23,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +81,7 @@ public class Controller {
 
     private static final String INFO_FILE_NAME = "./info.csv";
 
-    private static final String[] INFO_CSV_HEADER = {"time", "longitude","latitude","altitude",  "hdop", "vdop", "pdop"};
+    private static final String[] INFO_CSV_HEADER = {"time", "longitude","latitude","altitude",  "hdop", "vdop", "pdop", "satellite_count"};
 
     private static final String HDOP_HTML = "index.html";
 
@@ -109,6 +110,13 @@ public class Controller {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+        PacketParser.createDOPCsv(sourceRecords, "./src/main/resources/dop.csv");
+        File trackFile = new File("./track.txt");
+        List<PacketParser.InertialDTO> inertialDTOS = PacketParser.parseInertialExplorerFile(trackFile);
+        List<PacketParser.InfoDTO> infoDTOS = PacketParser.getDopDTOList(sourceRecords);
+        if (trackFile.exists()){
+            PacketParser.getDeltaFile(infoDTOS, inertialDTOS);
         }
         recordView.setItems(FXCollections.observableList(sourceRecords));
     }
@@ -163,12 +171,12 @@ public class Controller {
             System.out.println("Данные отсутствуют!!!");
             return;
         }
-        List<PacketParser.DopDTO> sources = PacketParser.getDopDTOList(sourceRecords);
+        List<PacketParser.InfoDTO> sources = PacketParser.getDopDTOList(sourceRecords);
         File outputFile = new File(INFO_FILE_NAME);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(INFO_CSV_HEADER))){
             sources.forEach(x->{
                 try {
-                    printer.printRecord(x.getTime(), x.getLongitude(), x.getLatitude(), x.getAltitude(),  x.getHDOP(), x.getVDOP(), x.getPDOP());
+                    printer.printRecord(x.getTime(), x.getLongitude(), x.getLatitude(), x.getAltitude(),  x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getSatelliteCount());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }
