@@ -9,8 +9,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
-import net.sf.marineapi.nmea.sentence.GGASentence;
-import net.sf.marineapi.nmea.sentence.GSASentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.ZDASentence;
 import org.apache.commons.csv.CSVFormat;
@@ -30,19 +28,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Controller {
-
-
-    @FXML
-    public Tab ellipseTab;
-
-    @FXML
-    public Tab geoTab;
-
-    @FXML
-    public Tab parsingTab;
-
-    @FXML
-    public TabPane tabPane;
 
     @FXML
     private TextField nmeaPath;
@@ -66,33 +51,36 @@ public class Controller {
     private TextArea legendText;
 
     @FXML
-    private AnchorPane parsingPane;
-
-    @FXML
-    private AnchorPane ellipsePane;
-
-    @FXML
-    private AnchorPane geofactorsPane;
-
-    @FXML
     private WebView geofactorsWebView;
+
+    @FXML
+    private WebView coordinatesWebView;
 
     private final List<Record> sourceRecords = new ArrayList<>();
 
-    private static final String INFO_FILE_NAME = "./info.csv";
+    private static final String INFO_FILE_NAME = "../output/info.csv";
 
     private static final String[] INFO_CSV_HEADER = {"time", "longitude","latitude","altitude",  "hdop", "vdop", "pdop", "satellite_count"};
 
-    private static final String HDOP_HTML = "index.html";
+    private static final String HDOP_HTML = "dop-graph.html";
+    private static final String POS_HTML = "coordinates.html";
 
     @FXML
     private void initialize(){
-        WebEngine engine = geofactorsWebView.getEngine();
+        WebEngine factorsEngine = geofactorsWebView.getEngine();
         URL url = getClass().getClassLoader().getResource(HDOP_HTML);
         if (url != null){
-            engine.load(url.toString());
+            factorsEngine.load(url.toString());
         } else {
-            throw new IllegalStateException("Resource not found: index.html");
+            throw new IllegalStateException("Resource not found: dop-graph.html");
+        }
+
+        WebEngine coordinatesEngine = coordinatesWebView.getEngine();
+        url = getClass().getClassLoader().getResource(POS_HTML);
+        if (url != null){
+            coordinatesEngine.load(url.toString());
+        } else {
+            throw new IllegalStateException("Resource not found: coordinates.html");
         }
     }
 
@@ -111,12 +99,14 @@ public class Controller {
                 e.printStackTrace();
             }
         }
-        PacketParser.createDOPCsv(sourceRecords, "./src/main/resources/dop.csv");
-        File trackFile = new File("./track.txt");
-        List<PacketParser.InertialDTO> inertialDTOS = PacketParser.parseInertialExplorerFile(trackFile);
-        List<PacketParser.InfoDTO> infoDTOS = PacketParser.getDopDTOList(sourceRecords);
+        PacketParser.createPositionCsv(sourceRecords);
+        PacketParser.createDOPCsv(sourceRecords);
+        File trackFile = new File("../input/track.txt");
         if (trackFile.exists()){
-            PacketParser.getDeltaFile(infoDTOS, inertialDTOS);
+            List<PacketParser.InertialDTO> inertialDTOS = PacketParser.parseInertialExplorerFile(trackFile);
+            List<PacketParser.InfoDTO> infoDTOS = PacketParser.getDopDTOList(sourceRecords);
+            PacketParser.createActualPositionCsv(inertialDTOS);
+            PacketParser.createDeltaFile(infoDTOS, inertialDTOS);
         }
         recordView.setItems(FXCollections.observableList(sourceRecords));
     }
@@ -127,7 +117,7 @@ public class Controller {
         LocalDate toDate = toPicker.getValue();
         List<Record> filtered = sourceRecords.stream().filter(record -> {
             Optional<Sentence> optional = record.getSentences().stream().filter(x -> "ZDA".equals(x.getSentenceId())).findFirst();
-            if (optional.isEmpty()) {
+            if (!optional.isPresent()) {
                 return false;
             }
             Sentence sentence = optional.get();

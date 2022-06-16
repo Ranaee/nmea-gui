@@ -29,9 +29,11 @@ public class PacketParser {
 
     private static final int PACKET_LENGTH = 8;
 
-    private static final String POSITION_FILE_NAME = "./pos.csv";
-    private static final String DOP_FILE_NAME = "./dop.csv";
-    private static final String DELTA_FILE_NAME = "./delta.csv";
+    private static final String OUTPUT_PREFIX = "../output/";
+    private static final String POSITION_FILE_NAME = OUTPUT_PREFIX + "pos.csv";
+    private static final String ACTUAl_POSITION_FILE_NAME = OUTPUT_PREFIX + "actual_pos.csv";
+    private static final String DOP_FILE_NAME = OUTPUT_PREFIX + "dop.csv";
+    private static final String DELTA_FILE_NAME = OUTPUT_PREFIX + "delta.csv";
 
     private static final String[] POSITION_CSV_HEADER = {"pos_x", "pos_y"};
     private static final String[] DOP_CSV_HEADER = {"hdop", "vdop", "pdop"};
@@ -695,6 +697,24 @@ public class PacketParser {
     }
 
     @Nullable
+    public static File createActualPositionCsv(List<InertialDTO> inertialDTOS) {
+        File outputFile = new File(ACTUAl_POSITION_FILE_NAME);
+        try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(POSITION_CSV_HEADER))) {
+            inertialDTOS.forEach(x -> {
+                try {
+                    printer.printRecord(x.getLatitude(), x.getLongitude());
+                } catch (IOException e) {
+                    System.out.println("Error occurred during writing line");
+                }
+            });
+            return outputFile;
+        } catch (IOException e) {
+            System.out.println("Error occurred during output file creation");
+            return null;
+        }
+    }
+
+    @Nullable
     public static File createDOPCsv(List<Record> records){
        return createDOPCsv(records, null);
     }
@@ -794,7 +814,7 @@ public class PacketParser {
         return new InertialDTO(time, latitude, longtitude, hEll, sdHoriz, sdHeight);
     }
 
-    public static File getDeltaFile(List<InfoDTO> dops, List<InertialDTO> trackList){
+    public static File createDeltaFile(List<InfoDTO> dops, List<InertialDTO> trackList){
         if (dops.isEmpty()){
             throw new IllegalStateException("Dop list cannot be empty");
         }

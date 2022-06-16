@@ -72,6 +72,11 @@
                 <WebView fx:id="geofactorsWebView" prefHeight="761.0" prefWidth="1341.0"/>
             </AnchorPane>
         </Tab>
+        <Tab text="График координат">
+            <AnchorPane fx:id="coordinatesPane" prefHeight="761.0" prefWidth="1341.0">
+                <WebView fx:id="coordinatesWebView" prefHeight="761.0" prefWidth="1341.0"/>
+            </AnchorPane>
+        </Tab>
     </TabPane>
 
 </VBox>
