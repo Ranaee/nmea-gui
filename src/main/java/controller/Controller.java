@@ -99,6 +99,13 @@ public class Controller {
                 e.printStackTrace();
             }
         }
+        File outputFolder = new File(PacketParser.OUTPUT_PREFIX);
+        if (!outputFolder.exists()){
+            boolean isCreated = outputFolder.mkdir();
+            if (!isCreated){
+                System.out.println("Error during output folder creation");
+            }
+        }
         PacketParser.createPositionCsv(sourceRecords);
         PacketParser.createDOPCsv(sourceRecords);
         File trackFile = new File("../input/track.txt");
