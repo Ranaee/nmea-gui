@@ -29,7 +29,7 @@ public class PacketParser {
 
     private static final int PACKET_LENGTH = 8;
 
-    public static final String OUTPUT_PREFIX = "../output/";
+    public static final String OUTPUT_PREFIX = "./output/";
     private static final String POSITION_FILE_NAME = OUTPUT_PREFIX + "pos.csv";
     private static final String ACTUAl_POSITION_FILE_NAME = OUTPUT_PREFIX + "actual_pos.csv";
     private static final String DOP_FILE_NAME = OUTPUT_PREFIX + "dop.csv";

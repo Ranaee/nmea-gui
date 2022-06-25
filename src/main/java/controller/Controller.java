@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static parser.PacketParser.OUTPUT_PREFIX;
+
 public class Controller {
 
     @FXML
@@ -58,7 +60,7 @@ public class Controller {
 
     private final List<Record> sourceRecords = new ArrayList<>();
 
-    private static final String INFO_FILE_NAME = "../output/info.csv";
+    private static final String INFO_FILE_NAME = OUTPUT_PREFIX + "info.csv";
 
     private static final String[] INFO_CSV_HEADER = {"time", "longitude","latitude","altitude",  "hdop", "vdop", "pdop", "satellite_count"};
 
@@ -99,7 +101,7 @@ public class Controller {
                 e.printStackTrace();
             }
         }
-        File outputFolder = new File(PacketParser.OUTPUT_PREFIX);
+        File outputFolder = new File(OUTPUT_PREFIX);
         if (!outputFolder.exists()){
             boolean isCreated = outputFolder.mkdir();
             if (!isCreated){
