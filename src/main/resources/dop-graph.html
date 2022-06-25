@@ -2,163 +2,164 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">  
-    <script type="text/javascript">
-      window.onload = function () {
-        document.querySelector("#read-button").addEventListener('click', function () {
-          if (document.querySelector("#file-input").files.length == 0) {
-            alert('Error : No file selected');
-            return;
-          }
-          let file = document.querySelector("#file-input").files[0];
 
-          // new FileReader object
-          let reader = new FileReader();
-          reader.addEventListener('load', function (e) {
-            // contents of the file
-            var dopCsv = e.target.result;
-            var chart = new CanvasJS.Chart("chartContainer1",
-                    {
-                      zoomEnabled: true,
-                      title: {
-                        text: "HDOP"
-                      },
-                      data: [
-                        {
-                          type: "line",
-                          xValueType: "dateTime",
-                          dataPoints: getDataPointsFromDopCSV(dopCsv, 0)
-                        }]
-                    });
-            chart.render();
-
-            var chart2 = new CanvasJS.Chart("chartContainer2",
-                    {
-                      zoomEnabled: true,
-                      title: {
-                        text: "VDOP"
-                      },
-                      data: [
-                        {
-                          type: "line",
-                          xValueType: "dateTime",
-                          dataPoints: getDataPointsFromDopCSV(dopCsv, 1)
-                        }]
-                    });
-            chart2.render();
-
-            var chart3 = new CanvasJS.Chart("chartContainer3",
-                    {
-                      zoomEnabled: true,
-                      title: {
-                        text: "PDOP"
-                      },
-                      data: [
-                        {
-                          type: "line",
-                          xValueType: "dateTime",
-                          dataPoints: getDataPointsFromDopCSV(dopCsv, 2)
-                        }]
-                    });
-            chart3.render();
-          });
-
-          // event fired when file reading failed
-          reader.addEventListener('error', function() {
-            alert('Error : Failed to read file');
-          });
-
-          // read file as text file
-          reader.readAsText(file);
-
-        });
-        document.querySelector("#read-delta-button").addEventListener('click', function () {
-          if (document.querySelector("#delta-input").files.length == 0) {
-            alert('Error : No file selected');
-            return;
-          }
-          let file = document.querySelector("#delta-input").files[0];
-
-          // new FileReader object
-          let reader = new FileReader();
-          reader.addEventListener('load', function (e) {
-            // contents of the file
-            var dopCsv = e.target.result;
-            var chart = new CanvasJS.Chart("chartContainer4",
-                    {
-                      zoomEnabled: true,
-                      title: {
-                        text: "Latitude Delta "
-                      },
-                      data: [
-                        {
-                          type: "line",
-                          xValueType: "dateTime",
-                          dataPoints: getDataPointsFromDeltaCSV(dopCsv, 0)
-                        }]
-                    });
-            chart.render();
-
-            var chart2 = new CanvasJS.Chart("chartContainer5",
-                    {
-                      zoomEnabled: true,
-                      title: {
-                        text: "Longitude Delta "
-                      },
-                      data: [
-                        {
-                          type: "line",
-                          xValueType: "dateTime",
-                          dataPoints: getDataPointsFromDeltaCSV(dopCsv, 1)
-                        }]
-                    });
-            chart2.render();
-          });
-
-          // event fired when file reading failed
-          reader.addEventListener('error', function() {
-            alert('Error : Failed to read file');
-          });
-
-          // read file as text file
-          reader.readAsText(file);
-
-        });
-      }
-
-      function getDataPointsFromDopCSV(csv, dopIndex) {
-        var dataPoints = csvLines = points = [];
-        csvLines = csv.split(/[\r?\n|\r|\n]+/);
-
-        for (var i = 1; i < csvLines.length; i++)
-          if (csvLines[i].length > 0) {
-            points = csvLines[i].split(",");
-            dataPoints.push({
-              x: parseFloat(points[3]),
-              y: parseFloat(points[dopIndex])
-            });
-          }
-        return dataPoints;
-      }
-
-      function getDataPointsFromDeltaCSV(csv, index) {
-        var dataPoints = csvLines = points = [];
-        csvLines = csv.split(/[\r?\n|\r|\n]+/);
-
-        for (var i = 1; i < csvLines.length; i++)
-          if (csvLines[i].length > 0) {
-            points = csvLines[i].split(",");
-            dataPoints.push({
-              x: parseFloat(points[2]),
-              y: parseFloat(points[index])
-            });
-          }
-        return dataPoints;
-      }
-  </script>
   <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     <title>HDOP</title>
   </head>
 <body>
+<script type="text/javascript">
+  window.onload = function () {
+    document.querySelector("#read-button").addEventListener('click', function () {
+      if (document.querySelector("#file-input").files.length == 0) {
+        alert('Error : No file selected');
+        return;
+      }
+      let file = document.querySelector("#file-input").files[0];
+
+      // new FileReader object
+      let reader = new FileReader();
+      reader.addEventListener('load', function (e) {
+        // contents of the file
+        var dopCsv = e.target.result;
+        var chart = new CanvasJS.Chart("chartContainer1",
+                {
+                  zoomEnabled: true,
+                  title: {
+                    text: "HDOP"
+                  },
+                  data: [
+                    {
+                      type: "line",
+                      xValueType: "dateTime",
+                      dataPoints: getDataPointsFromDopCSV(dopCsv, 0)
+                    }]
+                });
+        chart.render();
+
+        var chart2 = new CanvasJS.Chart("chartContainer2",
+                {
+                  zoomEnabled: true,
+                  title: {
+                    text: "VDOP"
+                  },
+                  data: [
+                    {
+                      type: "line",
+                      xValueType: "dateTime",
+                      dataPoints: getDataPointsFromDopCSV(dopCsv, 1)
+                    }]
+                });
+        chart2.render();
+
+        var chart3 = new CanvasJS.Chart("chartContainer3",
+                {
+                  zoomEnabled: true,
+                  title: {
+                    text: "PDOP"
+                  },
+                  data: [
+                    {
+                      type: "line",
+                      xValueType: "dateTime",
+                      dataPoints: getDataPointsFromDopCSV(dopCsv, 2)
+                    }]
+                });
+        chart3.render();
+      });
+
+      // event fired when file reading failed
+      reader.addEventListener('error', function() {
+        alert('Error : Failed to read file');
+      });
+
+      // read file as text file
+      reader.readAsText(file);
+
+    });
+    document.querySelector("#read-delta-button").addEventListener('click', function () {
+      if (document.querySelector("#delta-input").files.length == 0) {
+        alert('Error : No file selected');
+        return;
+      }
+      let file = document.querySelector("#delta-input").files[0];
+
+      // new FileReader object
+      let reader = new FileReader();
+      reader.addEventListener('load', function (e) {
+        // contents of the file
+        var dopCsv = e.target.result;
+        var chart = new CanvasJS.Chart("chartContainer4",
+                {
+                  zoomEnabled: true,
+                  title: {
+                    text: "Latitude Delta "
+                  },
+                  data: [
+                    {
+                      type: "line",
+                      xValueType: "dateTime",
+                      dataPoints: getDataPointsFromDeltaCSV(dopCsv, 0)
+                    }]
+                });
+        chart.render();
+
+        var chart2 = new CanvasJS.Chart("chartContainer5",
+                {
+                  zoomEnabled: true,
+                  title: {
+                    text: "Longitude Delta "
+                  },
+                  data: [
+                    {
+                      type: "line",
+                      xValueType: "dateTime",
+                      dataPoints: getDataPointsFromDeltaCSV(dopCsv, 1)
+                    }]
+                });
+        chart2.render();
+      });
+
+      // event fired when file reading failed
+      reader.addEventListener('error', function() {
+        alert('Error : Failed to read file');
+      });
+
+      // read file as text file
+      reader.readAsText(file);
+
+    });
+  }
+
+  function getDataPointsFromDopCSV(csv, dopIndex) {
+    var dataPoints = csvLines = points = [];
+    csvLines = csv.split(/[\r?\n|\r|\n]+/);
+
+    for (var i = 1; i < csvLines.length; i++)
+      if (csvLines[i].length > 0) {
+        points = csvLines[i].split(",");
+        dataPoints.push({
+          x: parseFloat(points[3]),
+          y: parseFloat(points[dopIndex])
+        });
+      }
+    return dataPoints;
+  }
+
+  function getDataPointsFromDeltaCSV(csv, index) {
+    var dataPoints = csvLines = points = [];
+    csvLines = csv.split(/[\r?\n|\r|\n]+/);
+
+    for (var i = 1; i < csvLines.length; i++)
+      if (csvLines[i].length > 0) {
+        points = csvLines[i].split(",");
+        dataPoints.push({
+          x: parseFloat(points[2]),
+          y: parseFloat(points[index])
+        });
+      }
+    return dataPoints;
+  }
+</script>
 <div>
   <input type="file" id="file-input" />
   <button id="read-button">Read DOP File</button>
