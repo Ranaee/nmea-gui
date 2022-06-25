@@ -682,11 +682,26 @@ public class PacketParser {
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(POSITION_CSV_HEADER))) {
             records.forEach(x -> {
                 GGASentence sentence = (GGASentence) x.getSentences().get(0);
-                Position position = sentence.getPosition();
+                Position position = null;
                 try {
-                    printer.printRecord(position.getLatitude(), position.getLongitude());
-                } catch (IOException e) {
-                    System.out.println("Error occurred during writing line");
+                    position = sentence.getPosition();
+                } catch (DataNotAvailableException dataNotAvailableException){
+                    Optional<Sentence> gllOpt = x.getSentences().stream().filter(y -> GLL_STR.equals(y.getSentenceId())).findFirst();
+                    if (gllOpt.isPresent()){
+                        GLLSentence gllSentence = (GLLSentence) gllOpt.get();
+                        try {
+                            position = gllSentence.getPosition();
+                        }  catch (DataNotAvailableException dataNotAvailableExceptionInner){
+                            System.out.println("Couldn't find position for sentence: " + gllSentence.toSentence());
+                        }
+                    }
+                }
+                if (position != null){
+                    try {
+                        printer.printRecord(position.getLatitude(), position.getLongitude());
+                    } catch (IOException e) {
+                        System.out.println("Error occurred during writing line");
+                    }
                 }
             });
             return outputFile;
