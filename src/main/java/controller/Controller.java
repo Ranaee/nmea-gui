@@ -110,7 +110,7 @@ public class Controller {
         }
         PacketParser.createPositionCsv(sourceRecords);
         PacketParser.createDOPCsv(sourceRecords);
-        File trackFile = new File("../input/track.txt");
+        File trackFile = new File("./input/track.txt");
         if (trackFile.exists()){
             List<PacketParser.InertialDTO> inertialDTOS = PacketParser.parseInertialExplorerFile(trackFile);
             List<PacketParser.InfoDTO> infoDTOS = PacketParser.getDopDTOList(sourceRecords);
