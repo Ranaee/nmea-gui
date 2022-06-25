@@ -70,14 +70,15 @@ public class Controller {
     @FXML
     private void initialize(){
         WebEngine factorsEngine = geofactorsWebView.getEngine();
+        factorsEngine.setJavaScriptEnabled(true);
         URL url = getClass().getClassLoader().getResource(HDOP_HTML);
         if (url != null){
             factorsEngine.load(url.toString());
         } else {
             throw new IllegalStateException("Resource not found: dop-graph.html");
         }
-
         WebEngine coordinatesEngine = coordinatesWebView.getEngine();
+        coordinatesEngine.setJavaScriptEnabled(true);
         url = getClass().getClassLoader().getResource(POS_HTML);
         if (url != null){
             coordinatesEngine.load(url.toString());
