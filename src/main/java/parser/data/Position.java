@@ -1,4 +1,4 @@
-package parser;
+package parser.data;
 
 public class Position {
 

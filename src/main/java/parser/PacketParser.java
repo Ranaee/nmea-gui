@@ -1,5 +1,6 @@
 package parser;
 
+import exception.UnsupportedLineException;
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.UnsupportedSentenceException;
@@ -11,12 +12,15 @@ import net.sf.marineapi.nmea.util.Time;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.jetbrains.annotations.Nullable;
-import sentence.UnknownParser;
-import sentence.UnknownSentence;
+import parser.data.PositionWithTime;
+import parser.data.Record;
+import parser.sentence.UnknownParser;
+import parser.sentence.UnknownSentence;
 
 import java.io.*;
 import java.math.BigDecimal;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,17 +31,14 @@ import java.util.stream.Collectors;
  */
 public class PacketParser {
 
-    private static final int PACKET_LENGTH = 8;
-
     public static final String OUTPUT_PREFIX = "./output/";
     private static final String POSITION_FILE_NAME = OUTPUT_PREFIX + "pos.csv";
     private static final String ACTUAl_POSITION_FILE_NAME = OUTPUT_PREFIX + "actual_pos.csv";
     private static final String DOP_FILE_NAME = OUTPUT_PREFIX + "dop.csv";
-    private static final String DELTA_FILE_NAME = OUTPUT_PREFIX + "delta.csv";
 
     private static final String[] POSITION_CSV_HEADER = {"pos_x", "pos_y"};
     private static final String[] DOP_CSV_HEADER = {"hdop", "vdop", "pdop"};
-    private static final String[] DELTA_CSV_HEADER = {"latitude", "longitude", "time"};
+    private static final String[] DELTA_CSV_HEADER = {"latitude", "longitude", "time", "lat_m" ,"long_m"};
 
     private static final String GGA_STR = "GGA";
     private static final String GSA_STR = "GSA";
@@ -51,15 +52,112 @@ public class PacketParser {
 
     private static final String WHITESPACE_SPLIT_PATTERN = "\\s+";
 
-    public static class InfoDTO {
+    private final static double WGS84az=6378137.00;
+    private final static double WGS84e1=0.081819199;
+
+    public static class ConvertedDTO {
+        private final double longitudeD;
+        private final double latitudeD;
+        private final double altitudeD;
+        private final double longitudeM;
+        private final double latitudeM;
+        private final double altitudeM;
+        private final int satelliteCount;
+
+        @Nullable
+        private LocalDateTime dateTime;
+        private LocalTime time;
+
+        public ConvertedDTO(double longitudeD, double latitudeD, double altitudeD, double longitudeM, double latitudeM, double altitudeM, LocalDateTime dateTime, int satelliteCount) {
+            this.longitudeD = longitudeD;
+            this.latitudeD = latitudeD;
+            this.altitudeD = altitudeD;
+            this.longitudeM = longitudeM;
+            this.latitudeM = latitudeM;
+            this.altitudeM = altitudeM;
+            this.dateTime = dateTime;
+            this.time = dateTime.toLocalTime();
+            this.satelliteCount = satelliteCount;
+        }
+
+        public ConvertedDTO(double longitudeD, double latitudeD, double altitudeD, double longitudeM, double latitudeM, double altitudeM, LocalDateTime dateTime) {
+            this.longitudeD = longitudeD;
+            this.latitudeD = latitudeD;
+            this.altitudeD = altitudeD;
+            this.longitudeM = longitudeM;
+            this.latitudeM = latitudeM;
+            this.altitudeM = altitudeM;
+            this.dateTime = dateTime;
+            this.time = dateTime.toLocalTime();
+            this.satelliteCount = -1;
+        }
+        public ConvertedDTO(double longitudeD, double latitudeD, double altitudeD, double longitudeM, double latitudeM, double altitudeM, LocalTime time, int satelliteCount) {
+            this.longitudeD = longitudeD;
+            this.latitudeD = latitudeD;
+            this.altitudeD = altitudeD;
+            this.longitudeM = longitudeM;
+            this.latitudeM = latitudeM;
+            this.altitudeM = altitudeM;
+            this.dateTime = null;
+            this.time = time;
+            this.satelliteCount = satelliteCount;
+        }
+
+        public ConvertedDTO(double longitudeD, double latitudeD, double altitudeD, double longitudeM, double latitudeM, double altitudeM, LocalTime time) {
+            this.longitudeD = longitudeD;
+            this.latitudeD = latitudeD;
+            this.altitudeD = altitudeD;
+            this.longitudeM = longitudeM;
+            this.latitudeM = latitudeM;
+            this.altitudeM = altitudeM;
+            this.dateTime = null;
+            this.time = time;
+            this.satelliteCount = -1;
+        }
+
+        public double getLongitudeD() {
+            return longitudeD;
+        }
+
+        public double getLatitudeD() {
+            return latitudeD;
+        }
+
+        public double getAltitudeD() {
+            return altitudeD;
+        }
+
+        public double getLongitudeM() {
+            return longitudeM;
+        }
+
+        public double getLatitudeM() {
+            return latitudeM;
+        }
+
+        public double getAltitudeM() {
+            return altitudeM;
+        }
+
+        public LocalDateTime getDateTime() {
+            return dateTime;
+        }
+
+        public void setDateTime(LocalDateTime dateTime) {
+            this.dateTime = dateTime;
+        }
+    }
+
+    public static class InfoDTO implements PositionWithTime {
         private final double hDOP;
         private final double vDOP;
         private final double pDOP;
         private final double longitude;
         private final double latitude;
-        private final double altitude;
+        private double altitude;
         private final int satelliteCount;
         private final LocalDateTime time;
+
 
         public InfoDTO(double hDOP, double vDOP, double pDOP, LocalDateTime time, double longitude, double latitude, double altitude, int satelliteCount) {
             this.hDOP = hDOP;
@@ -109,8 +207,13 @@ public class PacketParser {
         public int getSatelliteCount() {
             return satelliteCount;
         }
-        public LocalDateTime getTime() {
+
+        public LocalDateTime getDateTime() {
             return time;
+        }
+
+        public LocalTime getTime(){
+            return time.toLocalTime();
         }
 
         @Override
@@ -137,9 +240,17 @@ public class PacketParser {
         public double getAltitude() {
             return altitude;
         }
+
+        public ConvertedDTO getConvertedDto(){
+            double n = WGS84az/Math.sqrt(1 - Math.pow(WGS84e1,2)*Math.pow(Math.sin(latitude),2));
+            double x = (n+altitude)*Math.cos(latitude)*Math.cos(longitude);
+            double y = (n+altitude)*Math.cos(latitude)*Math.sin(longitude);
+            double z = (n*(1-Math.pow(WGS84e1,2))+altitude)*Math.sin(latitude);
+            return new ConvertedDTO(longitude, latitude, altitude, x,y,z,time);
+        }
     }
 
-    public static class InertialDTO {
+    public static class InertialDTO implements PositionWithTime{
 
         private final LocalTime time;
         private final double latitude;
@@ -163,12 +274,20 @@ public class PacketParser {
             return time;
         }
 
+        public LocalDateTime getDateTime(){
+            return null;
+        }
+
         public double getLatitude() {
             return latitude;
         }
 
         public double getLongitude() {
             return longitude;
+        }
+
+        public double getAltitude() {
+            return hEll;
         }
 
         public double gethEll() {
@@ -181,6 +300,52 @@ public class PacketParser {
 
         public double getSdHeight() {
             return sdHeight;
+        }
+    }
+
+    public static class RTKPostDTO implements PositionWithTime{
+        private final LocalDate date;
+        private final LocalTime time;
+        private final double latitude;
+        private final double longitude;
+        private final double height;
+        private final int q;
+
+        public RTKPostDTO(LocalDate date, LocalTime time, double latitude, double longitude, double height, int satteliteCount) {
+            this.date = date;
+            this.time = time;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.height = height;
+            this.q = satteliteCount;
+        }
+
+
+        public LocalTime getTime() {
+            return time;
+        }
+
+        public LocalDateTime getDateTime(){
+            return LocalDateTime.of(date, time);
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+        public double getAltitude(){
+            return height;
+        }
+
+        public double getHeight() {
+            return height;
+        }
+
+        public int getSatteliteCount(){
+            return q;
         }
     }
 
@@ -211,20 +376,20 @@ public class PacketParser {
 
 
     private static String getVTGLegend() {
-        return "Курс на истинный полюс в градусах - x.x" +
-        "\nФлаг достоверности курса - 'T'-True(Достоверный) / 'F'-False(Недостоверный)" +
-        "\nМагнитное склонение в градусах (может не использоваться) - x.x" +
-        "\nОтносительно северного магнитного полюса (может не использоваться) - М(Магнитный)" +
-        "\nСкорость - s.ss" +
-        "\nЕдиница измерения скорости, узлы - N" +
-        "\nСкорость - s.ss" +
-        "\nЕдиница измерения скорости, км/ч - К" +
-        "\nСпособ вычисления скорости и курса: 'A' - автономный." +
-        "\n'D' - дифференциальный;\n" +
-        "'E' - аппроксимация;\n" +
-        "'M' - фиксированные данные;\n" +
-        "'N' - недостоверные данные;" +
-        "\nКонтрольная сумма строки - *hh\n";
+        return "Курс на истинный полюс в градусах - x.x\n" +
+                "Флаг достоверности курса - 'T'-True(Достоверный) / 'F'-False(Недостоверный)\n" +
+                "Магнитное склонение в градусах (может не использоваться) - x.x\n" +
+                "Относительно северного магнитного полюса (может не использоваться) - М(Магнитный)\n" +
+                "Скорость - s.ss\n" +
+                "Единица измерения скорости, узлы - N\n" +
+                "Скорость - s.ss\n" +
+                "Единица измерения скорости, км/ч - К\n" +
+                "Способ вычисления скорости и курса: 'A' - автономный.\n" +
+                "'D' - дифференциальный;\n" +
+                "'E' - аппроксимация;\n" +
+                "'M' - фиксированные данные;\n" +
+                "'N' - недостоверные данные;\n" +
+                "Контрольная сумма строки - *hh\n";
     }
 
     private static String getGSALegend() {
@@ -692,13 +857,16 @@ public class PacketParser {
                         try {
                             position = gllSentence.getPosition();
                         }  catch (DataNotAvailableException dataNotAvailableExceptionInner){
-                            System.out.println("Couldn't find position for sentence: " + gllSentence.toSentence());
+                            System.out.println("Couldn't find position for parser.sentence: " + gllSentence.toSentence());
                         }
                     }
                 }
                 if (position != null){
+                    InfoDTO infoDTO = new InfoDTO(position.getLatitude(), position.getLongitude(), LocalDateTime.now());
+                    infoDTO.altitude = position.getAltitude();
+                    ConvertedDTO convertedDTO = infoDTO.getConvertedDto();
                     try {
-                        printer.printRecord(position.getLatitude(), position.getLongitude());
+                        printer.printRecord(convertedDTO.getLatitudeD(), convertedDTO.getLongitudeD(), convertedDTO.getLatitudeM(), convertedDTO.getLongitudeM());
                     } catch (IOException e) {
                         System.out.println("Error occurred during writing line");
                     }
@@ -714,10 +882,11 @@ public class PacketParser {
     @Nullable
     public static File createActualPositionCsv(List<InertialDTO> inertialDTOS) {
         File outputFile = new File(ACTUAl_POSITION_FILE_NAME);
+        List<ConvertedDTO> convertedDTOS = inertialDTOS.stream().map(PacketParser::convertInertialToInfo).map(InfoDTO::getConvertedDto).collect(Collectors.toList());
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(POSITION_CSV_HEADER))) {
-            inertialDTOS.forEach(x -> {
+            convertedDTOS.forEach(x -> {
                 try {
-                    printer.printRecord(x.getLatitude(), x.getLongitude());
+                    printer.printRecord(x.getLatitudeD(), x.getLongitudeD(), x.getLatitudeM(), x.getLongitudeM());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }
@@ -739,12 +908,12 @@ public class PacketParser {
         String finalPath = path == null ? DOP_FILE_NAME : path;
         File outputFile = new File(finalPath);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DOP_CSV_HEADER))){
-            List<InfoDTO> dopList = getDopDTOList(records).stream().map(x->new InfoDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime())).collect(Collectors.toList());
-            TreeSet<InfoDTO> sortedSet = new TreeSet<>(Comparator.comparing(InfoDTO::getTime));
+            List<InfoDTO> dopList = getDopDTOList(records).stream().map(x->new InfoDTO(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getDateTime())).collect(Collectors.toList());
+            TreeSet<InfoDTO> sortedSet = new TreeSet<>(Comparator.comparing(InfoDTO::getDateTime));
             sortedSet.addAll(dopList);
             sortedSet.forEach(x->{
                 try {
-                    printer.printRecord(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
+                    printer.printRecord(x.getHDOP(), x.getVDOP(), x.getPDOP(), x.getDateTime().toInstant(OffsetDateTime.now().getOffset())
                             .toEpochMilli());
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
@@ -818,8 +987,26 @@ public class PacketParser {
         return result;
     }
 
+    public static List<RTKPostDTO> parseRTKPostFile(File rtkFile){
+        List<RTKPostDTO> result = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(rtkFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.startsWith("%")){
+                    result.add(parseRTKPostLine(line));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     public static InertialDTO parseInertialLine(String line){
         String[] strArr = line.split(WHITESPACE_SPLIT_PATTERN);
+        if (strArr.length != 7 ){
+            throw new UnsupportedLineException("Incorrect Inertial Explorer line");
+        }
         LocalTime time = LocalTime.parse(strArr[0]);
         double latitude = Double.parseDouble(strArr[1]);
         double longtitude = Double.parseDouble(strArr[2]);
@@ -829,56 +1016,36 @@ public class PacketParser {
         return new InertialDTO(time, latitude, longtitude, hEll, sdHoriz, sdHeight);
     }
 
-    public static File createDeltaFile(List<InfoDTO> dops, List<InertialDTO> trackList){
-        if (dops.isEmpty()){
-            throw new IllegalStateException("Dop list cannot be empty");
+    public static RTKPostDTO parseRTKPostLine(String line){
+        String[] strArr = line.split(WHITESPACE_SPLIT_PATTERN);
+        if (strArr.length<23){
+            throw new UnsupportedLineException("Incorrect RTKPOST line");
         }
-        InfoDTO infoDTO = dops.get(0);
-        LocalTime dopLocalTime = infoDTO.time.toLocalTime();
-        if (trackList.isEmpty()){
-            throw new IllegalStateException("Track list cannot be empty");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH);
+        LocalDate date = LocalDate.parse(strArr[0], formatter);
+        LocalTime time = LocalTime.parse(strArr[1]);
+        double latitude = Double.parseDouble(strArr[2]);
+        double longitude = Double.parseDouble(strArr[3]);
+        double height = Double.parseDouble(strArr[4]);
+        int satelliteCount = Integer.parseInt(strArr[5]);
+        return new RTKPostDTO(date, time, latitude, longitude, height, satelliteCount);
+    }
+
+    public static File createDeltaFile(String path, List<? extends PositionWithTime> pwtList1, List<? extends PositionWithTime> pwtList2){
+        if (pwtList1.isEmpty()){
+            throw new IllegalStateException("First list cannot be empty");
         }
-        InertialDTO inertialDTO = trackList.get(0);
-        LocalTime trackTime = inertialDTO.getTime();
-        int comparisonRes = dopLocalTime.compareTo(trackTime);
-        List<InfoDTO> deltaList = null;
-        if (comparisonRes == 0){
-            deltaList = getDeltaListSync(dops, trackList);
+        if (pwtList2.isEmpty()){
+            throw new IllegalStateException("Second list cannot be empty");
         }
-        if (comparisonRes > 0){
-            List<InertialDTO> syncedTrackList = new ArrayList<>(trackList);
-            for (InertialDTO track : trackList) {
-                if (!track.time.equals(dopLocalTime)) {
-                    syncedTrackList.remove(track);
-                } else {
-                    break;
-                }
-            }
-            if (syncedTrackList.isEmpty()){
-                throw new IllegalStateException("Cannot sync lists by time");
-            }
-            deltaList = getDeltaListSync(dops, syncedTrackList);
-        }
-        if (comparisonRes < 0){
-            List<InfoDTO> syncedInfoList = new ArrayList<>(dops);
-            for (InfoDTO info : dops) {
-                if (!info.time.toLocalTime().equals(trackTime)) {
-                    syncedInfoList.remove(info);
-                } else {
-                    break;
-                }
-            }
-            if (syncedInfoList.isEmpty()){
-                throw new IllegalStateException("Cannot sync lists by time");
-            }
-            deltaList =getDeltaListSync(syncedInfoList, trackList);
-        }
-        File outputFile = new File(DELTA_FILE_NAME);
+        List<ConvertedDTO> deltaList = getDeltaListUnsynced(pwtList1, pwtList2);
+        File outputFile = new File(path);
         try (FileWriter output = new FileWriter(outputFile); CSVPrinter printer = new CSVPrinter(output, CSVFormat.DEFAULT.withHeader(DELTA_CSV_HEADER))) {
             deltaList.forEach(x -> {
                 try {
-                    printer.printRecord(BigDecimal.valueOf(x.getLatitude()).toPlainString(), BigDecimal.valueOf(x.getLongitude()).toPlainString(), x.getTime().toInstant(OffsetDateTime.now().getOffset())
-                            .toEpochMilli());
+                    String count = x.satelliteCount == -1 ? "" : String.valueOf(x.satelliteCount);
+                    printer.printRecord(BigDecimal.valueOf(x.getLatitudeD()).toPlainString(), BigDecimal.valueOf(x.getLongitudeD()).toPlainString(), x.getDateTime().toInstant(OffsetDateTime.now().getOffset())
+                            .toEpochMilli(), BigDecimal.valueOf(x.getLatitudeM()).toPlainString(), BigDecimal.valueOf(x.getLongitudeM()).toPlainString(), count);
                 } catch (IOException e) {
                     System.out.println("Error occurred during writing line");
                 }
@@ -889,19 +1056,93 @@ public class PacketParser {
         }
         return new File("");
     }
-
-    private static List<InfoDTO> getDeltaListSync(List<InfoDTO> dops, List<InertialDTO> trackList){
-        int minSize = Math.min(dops.size(), trackList.size());
-        List<InfoDTO> result = new ArrayList<>();
-        for (int i = 0; i < minSize; i++) {
-            result.add(getDeltaDto(dops.get(i), trackList.get(i)));
+    private static List<ConvertedDTO> getDeltaListUnsynced(List<? extends PositionWithTime> pwtList1, List<? extends PositionWithTime> pwtList2){
+        List<ConvertedDTO> result = new ArrayList<>();
+        int i = 0;
+        int j = 0;
+        while (i < pwtList1.size() && j < pwtList2.size()){
+            PositionWithTime pwt1 = pwtList1.get(i);
+            PositionWithTime pwt2 = pwtList2.get(j);
+            LocalTime time1 = pwt1.getTime();
+            LocalTime time2 = pwt2.getTime();
+            int comparisonResult = time1.compareTo(time2);
+            if (comparisonResult == 0){
+                result.add(getDeltaDto(pwt1, pwt2));
+                j++;
+                i++;
+            }
+            if (comparisonResult > 0){
+                if (j == pwtList2.size() -1){
+                    break;
+                } else {
+                    j++;
+                    continue;
+                }
+            }
+            if (comparisonResult < 0){
+                if (i == pwtList1.size() -1){
+                    break;
+                } else {
+                    i++;
+                }
+            }
         }
         return result;
     }
 
-    private static InfoDTO getDeltaDto(InfoDTO infoDTO, InertialDTO inertialDTO){
-        double latitudeDelta = Math.abs(infoDTO.latitude-inertialDTO.latitude);
-        double longitudeDelta = Math.abs(infoDTO.longitude-inertialDTO.longitude);
-        return new InfoDTO(latitudeDelta, longitudeDelta, infoDTO.time);
+    private static ConvertedDTO getDeltaDto(InfoDTO infoDTO, InertialDTO inertialDTO){
+        ConvertedDTO track = convertInertialToInfo(inertialDTO).getConvertedDto();
+        ConvertedDTO info = infoDTO.getConvertedDto();
+        double latitudeDeltaD = Math.abs(info.latitudeD-track.latitudeD);
+        double longitudeDeltaD = Math.abs(info.longitudeD-track.longitudeD);
+        double altitudeDeltaD = Math.abs(info.altitudeD-track.altitudeD);
+        double latitudeDeltaM = Math.abs(info.latitudeM-track.latitudeM);
+        double longitudeDeltaM = Math.abs(info.longitudeM-track.longitudeM);
+        double altitudeDeltaM = Math.abs(info.altitudeM-track.altitudeM);
+        return new ConvertedDTO(latitudeDeltaD, longitudeDeltaD, altitudeDeltaD, latitudeDeltaM, longitudeDeltaM, altitudeDeltaM, infoDTO.time);
+    }
+
+    private static ConvertedDTO getDeltaDto(PositionWithTime pwt1, PositionWithTime pwt2){
+        LocalDateTime time;
+        if (pwt1.getDateTime() == null && pwt2.getDateTime() == null){
+            throw new RuntimeException("Cannot find date in objects");
+        }
+        time = pwt1.getDateTime() == null ? pwt2.getDateTime() : pwt1.getDateTime();
+        if (time == null){
+            throw new RuntimeException("Cannot find date in objects");
+        }
+        ConvertedDTO first = getConvertedDTO(pwt1);
+        ConvertedDTO second = getConvertedDTO(pwt2);
+        double latitudeDeltaD = Math.abs(first.latitudeD-second.latitudeD);
+        double longitudeDeltaD = Math.abs(first.longitudeD-second.longitudeD);
+        double altitudeDeltaD = Math.abs(first.altitudeD-second.altitudeD);
+        double latitudeDeltaM = Math.abs(first.latitudeM-second.latitudeM);
+        double longitudeDeltaM = Math.abs(first.longitudeM-second.longitudeM);
+        double altitudeDeltaM = Math.abs(first.altitudeM-second.altitudeM);
+        int satCount = -1;
+        if (pwt1 instanceof RTKPostDTO){
+            satCount = ((RTKPostDTO) pwt1).q;
+        } else if (pwt2 instanceof RTKPostDTO){
+            satCount = ((RTKPostDTO) pwt2).q;
+        }
+        return new ConvertedDTO(latitudeDeltaD, longitudeDeltaD, altitudeDeltaD, latitudeDeltaM, longitudeDeltaM, altitudeDeltaM, time, satCount);
+    }
+
+    private static InfoDTO convertInertialToInfo(InertialDTO inertialDTO){
+        InfoDTO infoDTO = new InfoDTO(inertialDTO.latitude, inertialDTO.longitude, LocalDateTime.now());
+        infoDTO.altitude = inertialDTO.hEll;
+        return infoDTO;
+    }
+
+    public static ConvertedDTO getConvertedDTO(PositionWithTime positionWithTime){
+        double latitude = positionWithTime.getLatitude();
+        double longitude = positionWithTime.getLongitude();
+        double altitude = positionWithTime.getAltitude();
+        LocalTime time = positionWithTime.getTime();
+        double n = WGS84az/Math.sqrt(1 - Math.pow(WGS84e1,2)*Math.pow(Math.sin(latitude),2));
+        double x = (n+altitude)*Math.cos(latitude)*Math.cos(longitude);
+        double y = (n+altitude)*Math.cos(latitude)*Math.sin(longitude);
+        double z = (n*(1-Math.pow(WGS84e1,2))+altitude)*Math.sin(latitude);
+        return new ConvertedDTO(longitude, latitude, altitude, x,y,z,time);
     }
 }

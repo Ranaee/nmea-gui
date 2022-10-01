@@ -4,7 +4,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import parser.PacketParser;
-import parser.Record;
+import parser.data.Record;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +31,8 @@ public class Main extends Application {
 
 
     public static void main(String[] args) {
-//        launch(args);
-        parseConsole();
+        launch(args);
+//        parseConsole();
     }
 
     /**
@@ -40,7 +40,7 @@ public class Main extends Application {
      */
     private static void parseConsole() {
         File testText = new File("test_all_nmea.txt");
-        List<Record> records;
+        List<Record> records = null;
         try {
             records = PacketParser.parse(testText);
             PacketParser.createDOPCsv(records);
@@ -48,5 +48,6 @@ public class Main extends Application {
             e.printStackTrace();
         }
         boolean b = true;
+        PacketParser.createPositionCsv(records);
     }
 }

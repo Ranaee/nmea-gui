@@ -1,4 +1,4 @@
-package sentence;
+package parser.sentence;
 
 import net.sf.marineapi.nmea.sentence.TalkerId;
 
